@@ -1,4 +1,3 @@
-from turtle import width
 import plotly.graph_objects as go
 
 
@@ -8,7 +7,7 @@ class plot:
     This class will be used to create all necessary plots in a consistent format.
     """
 
-    def __init__(self, fig=None, width=800, height=400, title_size=14, tick_size=8, axis_size=10, font_size=8) -> None:
+    def __init__(self, fig=None, width=800, height=400, title_size=14, tick_size=8, axis_size=10, font_size=8, show_fig=False) -> None:
         if not fig:
             self.fig = go.Figure()
         else:
@@ -19,11 +18,12 @@ class plot:
         self.tick_size = tick_size
         self.axis_size = axis_size
         self.font_size = font_size
+        self.show_fig = show_fig
         self.margin = {
-            't': 0,
-            'b': 0,
-            'l': 0,
-            'r': 0
+            't': 100,
+            'b': 100,
+            'l': 100,
+            'r': 100
         }
         self.font_family = 'Arial'
         self.colorDict = {
@@ -44,8 +44,9 @@ class plot:
                 '#bdd7e5'
             ]
 
-    def _set_layout(self) -> None:
-        """A function to format the plot into the chosen layout
+    def _set_layout(self, x_label=None, y_label=None, title=None, legend_title=None) -> None:
+        """
+        A function to format the plot into the chosen layout
         It should be run after each plotting function.
         """
 
@@ -53,15 +54,27 @@ class plot:
             height=self.height,
             width=self.width,
             paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor='rgba(0,0,0,0)',
+            title=dict(
+                font=dict(
+                    color='#000000',
+                    size=self.title_size
+                ),
+                text=title
+            ),
+            margin=self.margin,
+            xaxis_title=x_label,
+            yaxis_title=y_label,
+            legend_title=legend_title,
         )
 
         self.fig.update_layout(layout)
-        self.fig.update_xaxes(linewidth = 1, linecolor ='black')
-        self.fig.update_yaxes(linewidth = 1, linecolor = 'black')
+        self.fig.update_xaxes(linewidth = 1, linecolor ='black', tickfont=dict(family=self.font_family, color='#000000', size=self.tick_size))
+        self.fig.update_yaxes(linewidth = 1, linecolor = 'black', tickfont=dict(family=self.font_family, color='#000000', size=self.tick_size))
 
     def _set_end_label(self, x, y, text, color):
-        """This function should be used to create labels at the right side of the graph
+        """
+        This function should be used to create labels at the right side of the graph
 
         Args:
             x (float): The most right variable on the x axis
@@ -71,11 +84,11 @@ class plot:
         """
 
         # Making room for the labels
-        self.margin['r'] = 10
+        self.margin['r'] *= 1.15
         self.fig.add_annotation(
-            x=x,
+            x=1.05,
             y=y,
-            xref="x",
+            xref="paper",
             yref="y",
             text=text,
             font=dict(
@@ -83,18 +96,44 @@ class plot:
                 size=self.font_size,
                 color=color
                 ),
-            align="left"
+            align="left",
+            ax=0,ay=0
         )
 
-    def bar_grouped(x, y, group, barmode='stack', x_title=None, y_title=None, title=None):
+    def bar_grouped(self,x, y, group, barmode='stack', x_title=None, y_title=None, title=None):
         pass
 
-    def bar(x, y, x_title=None, y_title=None, title=None):
+    def bar(self, x, y, x_title=None, y_title=None, title=None):
         pass
 
-    def continuous_grouped(x, y, group, markers='line', x_title=None, y_title=None, title=None):
+    def continuous_grouped(self, x, y, group, mode='line', x_title=None, y_title=None, title=None):
         pass
 
-    def continuous(x, y, markers='line', x_title=None, y_title=None, title=None):
-        pass
+    def continuous(self, x, y, name=None, mode='lines', x_title=None, y_title=None, title=None, end_annotation=False):
+        self.fig.add_trace(
+            go.Scatter(
+                x=x, y=y,
+                mode=mode,
+                name=name,
+                marker=dict(color=self.colorDict.get('primary'))
+            )
+        )
+        self._set_layout(x_label=x_title, y_label=y_title, title=title)
+        
+        if end_annotation:
+            self._set_end_label(x=x[-1], y=y[-1], text=name, color=self.colorDict.get('primary'))
 
+        self._set_layout(x_label='X axis', y_label='Y axis', title='Title')
+        if self.show_fig:
+            self.fig.show()
+
+        return self.fig
+        
+
+def main():
+    x = [1,2,3,4]
+    y = [1,2,3,4]
+    plot(show_fig=True).continuous(x, y, 'A', end_annotation=True)
+
+if __name__=='__main__':
+    main()
