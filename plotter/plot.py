@@ -124,7 +124,7 @@ class plot:
             end_annotation (bool, optional): If there should be an end annotation to the lines. Defaults to False.
 
         Returns:
-            [type]: [description]
+            go.Figure: The figure just created.
         """
         groups = list(dict.fromkeys(group))   
         group_indexex = [{group_value: [i for i, x in enumerate(group) if x==group_value]} for group_value in groups] 
