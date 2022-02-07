@@ -106,7 +106,21 @@ class plot:
     def bar_grouped(self,x, y, group, barmode='stack', x_title=None, y_title=None, title=None):
         pass
 
-    def bar(self, x, y, x_title=None, y_title=None, title=None):
+    def bar(self, x, y, x_title:str=None, y_title:str=None, title:str=None, annotation:bool=False, annotation_format:str=None):
+        """Creating a bar plot
+
+        Args:
+            x (list): List of x values
+            y (list): List of y values
+            x_title (str, optional): Label on the x axis. Defaults to None.
+            y_title (str, optional): Label on the y axis. Defaults to None.
+            title (str, optional): Plot title. Defaults to None.
+            annotation (bool, optional): If the bars should have annotation. Defaults to False.
+            annotation_format (str, optional): The format of the annotation, e.g. % or #. Defaults to None.
+        
+        Returns:
+            go.Figure: The figure just created
+        """
         pass
 
     def continuous_grouped(self, x, y, group, mode='lines', colors=None, x_title: str=None, y_title: str=None, title: str=None, end_annotation: bool=False):
