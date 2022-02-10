@@ -106,7 +106,7 @@ class plot:
     def bar_grouped(self,x, y, group, barmode='stack', x_title=None, y_title=None, title=None):
         pass
 
-    def bar(self, x, y, x_title:str=None, y_title:str=None, title:str=None, annotation:bool=False, annotation_format:str=None):
+    def bar(self, x, y, x_title:str=None, y_title:str=None, title:str=None, annotation:bool=False, annotation_format:str=None, type:str='category')->go.Figure():
         """Creating a bar plot
 
         Args:
@@ -121,7 +121,49 @@ class plot:
         Returns:
             go.Figure: The figure just created
         """
-        pass
+        self.fig.add_trace(
+            go.Bar(
+                x=x,
+                y=y
+            )
+        )
+        if annotation:
+            self.fig.update_traces(
+                text=y,
+                textposition='outside',
+                texttemplate=annotation_format
+            )
+
+            # Making sure that there is enough room for the annotations
+            y_lower = min(y)
+            if y_lower < 0:
+                y_lower *= 1.2
+            else:
+                y_lower = 0
+            y_upper = max(y)
+            if y_upper > 0:
+                y_upper *= 1.2
+            else:
+                y_upper = 0
+
+
+            self.fig.update_layout(
+                yaxis=dict(
+                    range=[y_lower, y_upper]
+                )
+            )
+
+        self._set_layout(x_label=x_title, y_label=y_title, title=title)
+        self.fig.update_layout(
+            showlegend=False,
+            xaxis=dict(
+                type=type
+            )
+        )
+        if self.show_fig:
+            self.fig.show()
+
+        return self.fig
 
     def continuous_grouped(self, x, y, group, mode='lines', colors=None, x_title: str=None, y_title: str=None, title: str=None, end_annotation: bool=False):
         """Building a plot with multiple line plots
@@ -189,11 +231,13 @@ class plot:
         
 
 def main():
-    x = [1,2,1,2]
-    y = [1,2,3,4]
+    x = [1,2]
+    y = [1,2]
     group = ['a', 'a', 'b', 'b'] 
     colors=['red', 'blue']
-    plot(show_fig=True).continuous_grouped(x, y, group=group, colors=colors, end_annotation=True)
+    #plot(show_fig=True).continuous_grouped(x, y, group=group, colors=colors, end_annotation=True)
+
+    plot(show_fig=True).bar(x, y, annotation=True)
 
 if __name__=='__main__':
     main()
