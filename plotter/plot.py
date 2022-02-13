@@ -159,7 +159,10 @@ class plot:
         self.fig.add_trace(
             go.Bar(
                 x=x,
-                y=y
+                y=y,
+
+                # Creating pretty hover boxes
+                hovertemplate = "%{y}<extra></extra>"
             )
         )
         if annotation:
@@ -232,7 +235,11 @@ class plot:
                         x=x_list, y=y_list,
                         mode=mode,
                         name=group_name,
-                        marker=dict(color=color)
+                        marker=dict(color=color),
+
+                        # Creating pretty hover boxes
+                        customdata=[group_name]*len(y_list),
+                        hovertemplate = "%{customdata}: %{y}<extra></extra>"
                     )
                 )
             
@@ -252,7 +259,10 @@ class plot:
                 x=x, y=y,
                 mode=mode,
                 name=name,
-                marker=dict(color=self.colorDict.get('primary'))
+                marker=dict(color=self.colorDict.get('primary')),
+
+                # Creating pretty hover boxes
+                hovertemplate = "%{y}<extra></extra>"
             )
         )
         self._set_layout(x_label=x_title, y_label=y_title, title=title)
@@ -260,7 +270,7 @@ class plot:
         if end_annotation:
             self._set_end_label(x=x[-1], y=y[-1], text=name, color=self.colorDict.get('primary'))
 
-        self._set_layout(x_label='X axis', y_label='Y axis', title='Title')
+        self._set_layout(x_label=x_title, y_label=y_title, title=title)
         if self.show_fig:
             self.fig.show()
 
@@ -268,13 +278,15 @@ class plot:
         
 
 def main():
-    x = [1,2,1,2]
-    y = [1,2,2,3]
-    group = ['a', 'a', 'b', 'b'] 
+    x = [1,2,3,1,2,3]
+    y = [1,2,2,2,3,5]
+    group = ['a', 'a', 'a', 'b', 'b', 'b'] 
     #colors=['red', 'blue']
     #plot(show_fig=True).continuous_grouped(x, y, group=group, end_annotation=True)
+    #plot(show_fig=True).continuous(x[:3], y[:3], end_annotation=True)
 
-    plot(show_fig=True).bar_grouped(x, y, group, annotation=True)
+    #plot(show_fig=True).bar_grouped(x, y, group, annotation=True)
+    plot(show_fig=True).bar(x[:3], y[:3], annotation=True)
 
 if __name__=='__main__':
     main()
