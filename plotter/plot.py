@@ -67,7 +67,8 @@ class plot:
             xaxis_title=x_label,
             yaxis_title=y_label,
             legend_title=legend_title,
-            showlegend=self.show_legend
+            showlegend=self.show_legend,
+            colorway=self.colorList
         )
 
         self.fig.update_layout(layout)
@@ -103,11 +104,104 @@ class plot:
         )
         self.show_legend=False
 
-    def bar_grouped(self,x, y, group, barmode='stack', x_title=None, y_title=None, title=None):
-        pass
+    def bar_grouped(self, x:list, y:list, group:list, barmode:str='stack', x_title:str=None, y_title:str=None, title:str=None, colors:list=None, texttemplate:str=None, annotation:bool=False)->go.Figure():
+        
+        groups = list(dict.fromkeys(group))   
+        group_indexex = [{group_value: [i for i, x in enumerate(group) if x==group_value]} for group_value in groups] 
+        if colors is None:
+            colors = [None] * len(groups)
 
-    def bar(self, x, y, x_title=None, y_title=None, title=None):
-        pass
+        for group_value, color in zip(group_indexex, colors):
+            for group_name, index in group_value.items():
+                x_list = [x[i] for i in index]
+                y_list = [y[i] for i in index]
+                if annotation:
+                    y_text = y_list
+                else:
+                    y_text = None
+
+                self.fig.add_trace(
+                    go.Bar(
+                        x=x_list, y=y_list,
+                        text=y_text,
+                        texttemplate=texttemplate,
+                        name=group_name,
+                        marker=dict(color=color),
+
+                        # Creating pretty hover boxes
+                        customdata=[group_name]*len(y_list),
+                        hovertemplate = "%{customdata}: %{y}<extra></extra>"
+                    )
+                )
+
+        self._set_layout(x_label=x_title, y_label=y_title, title=title)
+        self.fig.update_layout(barmode=barmode)
+        if self.show_fig:
+            self.fig.show()
+
+        return self.fig
+
+    def bar(self, x, y, x_title:str=None, y_title:str=None, title:str=None, annotation:bool=False, annotation_format:str=None, type:str='category')->go.Figure():
+        """Creating a bar plot
+
+        Args:
+            x (list): List of x values
+            y (list): List of y values
+            x_title (str, optional): Label on the x axis. Defaults to None.
+            y_title (str, optional): Label on the y axis. Defaults to None.
+            title (str, optional): Plot title. Defaults to None.
+            annotation (bool, optional): If the bars should have annotation. Defaults to False.
+            annotation_format (str, optional): The format of the annotation, e.g. % or #. Defaults to None.
+        
+        Returns:
+            go.Figure: The figure just created
+        """
+        self.fig.add_trace(
+            go.Bar(
+                x=x,
+                y=y,
+
+                # Creating pretty hover boxes
+                hovertemplate = "%{y}<extra></extra>"
+            )
+        )
+        if annotation:
+            self.fig.update_traces(
+                text=y,
+                textposition='outside',
+                texttemplate=annotation_format
+            )
+
+            # Making sure that there is enough room for the annotations
+            y_lower = min(y)
+            if y_lower < 0:
+                y_lower *= 1.2
+            else:
+                y_lower = 0
+            y_upper = max(y)
+            if y_upper > 0:
+                y_upper *= 1.2
+            else:
+                y_upper = 0
+
+
+            self.fig.update_layout(
+                yaxis=dict(
+                    range=[y_lower, y_upper]
+                )
+            )
+
+        self._set_layout(x_label=x_title, y_label=y_title, title=title)
+        self.fig.update_layout(
+            showlegend=False,
+            xaxis=dict(
+                type=type
+            )
+        )
+        if self.show_fig:
+            self.fig.show()
+
+        return self.fig
 
     def continuous_grouped(self, x, y, group, mode='lines', colors=None, x_title: str=None, y_title: str=None, title: str=None, end_annotation: bool=False):
         """Building a plot with multiple line plots
@@ -128,6 +222,8 @@ class plot:
         """
         groups = list(dict.fromkeys(group))   
         group_indexex = [{group_value: [i for i, x in enumerate(group) if x==group_value]} for group_value in groups] 
+        if colors is None:
+            colors = [None] * len(groups)
 
         for group_value, color in zip(group_indexex, colors):
             for group_name, index in group_value.items():
@@ -139,7 +235,11 @@ class plot:
                         x=x_list, y=y_list,
                         mode=mode,
                         name=group_name,
-                        marker=dict(color=color)
+                        marker=dict(color=color),
+
+                        # Creating pretty hover boxes
+                        customdata=[group_name]*len(y_list),
+                        hovertemplate = "%{customdata}: %{y}<extra></extra>"
                     )
                 )
             
@@ -159,7 +259,10 @@ class plot:
                 x=x, y=y,
                 mode=mode,
                 name=name,
-                marker=dict(color=self.colorDict.get('primary'))
+                marker=dict(color=self.colorDict.get('primary')),
+
+                # Creating pretty hover boxes
+                hovertemplate = "%{y}<extra></extra>"
             )
         )
         self._set_layout(x_label=x_title, y_label=y_title, title=title)
@@ -167,7 +270,7 @@ class plot:
         if end_annotation:
             self._set_end_label(x=x[-1], y=y[-1], text=name, color=self.colorDict.get('primary'))
 
-        self._set_layout(x_label='X axis', y_label='Y axis', title='Title')
+        self._set_layout(x_label=x_title, y_label=y_title, title=title)
         if self.show_fig:
             self.fig.show()
 
@@ -175,11 +278,15 @@ class plot:
         
 
 def main():
-    x = [1,2,1,2]
-    y = [1,2,3,4]
-    group = ['a', 'a', 'b', 'b'] 
-    colors=['red', 'blue']
-    plot(show_fig=True).continuous_grouped(x, y, group=group, colors=colors, end_annotation=True)
+    x = [1,2,3,1,2,3]
+    y = [1,2,2,2,3,5]
+    group = ['a', 'a', 'a', 'b', 'b', 'b'] 
+    #colors=['red', 'blue']
+    #plot(show_fig=True).continuous_grouped(x, y, group=group, end_annotation=True)
+    #plot(show_fig=True).continuous(x[:3], y[:3], end_annotation=True)
+
+    #plot(show_fig=True).bar_grouped(x, y, group, annotation=True)
+    plot(show_fig=True).bar(x[:3], y[:3], annotation=True)
 
 if __name__=='__main__':
     main()
