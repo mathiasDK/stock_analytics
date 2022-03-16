@@ -59,7 +59,7 @@ def create_peer_df(ticker:str, levels:int=3) -> pd.DataFrame:
 
     ticker_dataframe = pd.DataFrame.from_dict(ticker_dict)
     for i in range(1,levels):
-        ticker_dataframe = get_linked_tickers(ticker, ticker_df_in=ticker_dataframe, peer_group=i)
+        ticker_dataframe = get_linked_tickers(ticker_df_in=ticker_dataframe, peer_group=i)
 
     ticker_dataframe = ticker_dataframe.drop(columns=['peer_group']).drop_duplicates().reset_index(drop=True)
 
