@@ -40,7 +40,6 @@ class plot:
                 '#A899A5', 
                 '#492a42', 
                 '#d8eded', 
-                '#bdd7e5', 
                 '#bdd7e5'
             ]
         self.show_legend = True
