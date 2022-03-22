@@ -225,8 +225,8 @@ class stock_info:
             print(f'It wasn\'t possible to load the PB ratio for {self.ticker}', e)
             return None
     
-def create_peer_universe(ticker:str) -> pd.DataFrame:
-    df = create_peer_df('LVMUY')
+def create_peer_universe(ticker:str, levels:int=3) -> pd.DataFrame:
+    df = create_peer_df('LVMUY', levels=levels)
     cols = [
         'sector', 'industry', 'currency', 'market_value', 'gross_margin', 
         'ebitda_margin', 'operating_margin', 'enterprise_to_ebitda', 
