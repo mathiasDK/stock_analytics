@@ -1,11 +1,39 @@
-from plotter.plot import plot
-from scraper.scrape import create_peer_universe
+# from plotter.plot import plot
+# from scraper.peer_universe import create_peer_universe
+# from scraper import stock_info, create_peer_df
+from scraper.peer_universe import create_peer_df
+from scraper.information_load import stock_info
 import plotly.graph_objects as go
 import pandas as pd
 
+def create_peer_universe(ticker:str, levels:int=3) -> pd.DataFrame:
+    df = create_peer_df(ticker, levels=levels)
+    cols = [
+        'sector', 'industry', 'currency', 'market_value', 'gross_margin', 
+        'ebitda_margin', 'operating_margin', 'enterprise_to_ebitda', 
+        'beta', 'forward_pe', 'price_to_book'
+    ]
+    df[cols] = None
 
-def create_fig(data:pd.DataFrame, main_ticker:str, metrics:list, title:str=None, normalize:bool=False):
-    df = data.copy()
+    for idx, ticker in enumerate(df.ticker.values):
+        print(f'# Starting to load information about {ticker}')
+        stock_info_ticker = stock_info(ticker)
+        df.at[idx, 'sector'] = stock_info_ticker.get_sector()
+        df.at[idx, 'industry'] = stock_info_ticker.get_industry()
+        df.at[idx, 'currency'] = stock_info_ticker.get_currency()
+        df.at[idx, 'market_value'] = stock_info_ticker.get_market_value()
+        df.at[idx, 'gross_margin'] = stock_info_ticker.get_gross_margin()
+        df.at[idx, 'operating_margin'] = stock_info_ticker.get_operating_margin()
+        df.at[idx, 'ebitda_margin'] = stock_info_ticker.get_ebitda_margin()
+        df.at[idx, 'enterprise_to_ebitda'] = stock_info_ticker.get_enterprise_to_ebitda()
+        df.at[idx, 'beta'] = stock_info_ticker.get_beta()
+        df.at[idx, 'forward_pe'] = stock_info_ticker.get_forward_pe()
+        df.at[idx, 'price_to_book'] = stock_info_ticker.get_price_to_book()
+
+    return df
+
+def create_fig(data_peers:pd.DataFrame, main_ticker:str, metrics:list, title:str=None, normalize:bool=False):
+    df = data_peers.copy()
     if normalize:
         for metric in metrics:
             max_value = df[metric].max()
@@ -34,9 +62,15 @@ def create_fig(data:pd.DataFrame, main_ticker:str, metrics:list, title:str=None,
     if normalize:
         tickformat='.0'
         hover_template="<b>%{text}</b><br>Normalized %{y}: %{x:,.2f}<br><extra></extra>"
+        x_min = 0
+        x_max = 1
+        x_range=[x_min, x_max]
     else:
         tickformat='0%'
         hover_template="<b>%{text}</b><br>%{y}: %{x:,.1%}<br><extra></extra>"
+        x_min = max(new_data.metric_value.min(), -2)
+        x_max = new_data.metric_value.max()
+        x_range=[x_min, x_max]
 
     fig = go.Figure()
     fig.add_trace(
@@ -49,10 +83,7 @@ def create_fig(data:pd.DataFrame, main_ticker:str, metrics:list, title:str=None,
             hovertemplate=hover_template
         )
     )
-    if normalize:
-        tickformat='.0'
-    else:
-        tickformat='0%'
+
     fig.update_layout(
         paper_bgcolor='#f9f5ec',
         plot_bgcolor='#f9f5ec',
@@ -65,7 +96,8 @@ def create_fig(data:pd.DataFrame, main_ticker:str, metrics:list, title:str=None,
             tickcolor='black', 
             ticklen=5,
             showgrid=False,
-            zeroline=False
+            zeroline=False,
+            range=x_range
         ),
         yaxis=dict(
             showgrid=True,
@@ -84,7 +116,9 @@ def create_fig(data:pd.DataFrame, main_ticker:str, metrics:list, title:str=None,
     fig.show()
 
 if __name__=='__main__':
-    data = create_peer_universe('LVMUY', 5)
+    ticker = 'ORSTED.CO'.upper() #'LMVUY'
+    
+    data = create_peer_universe(ticker, 5)
     print(data)
-    create_fig(data, 'LVMUY', ['gross_margin', 'ebitda_margin', 'operating_margin'], title='Margins by company')
-    create_fig(data, 'LVMUY', ['enterprise_to_ebitda', 'beta', 'forward_pe', 'price_to_book'], title='Normalized ratios by company', normalize=True)
+    create_fig(data, ticker, ['gross_margin', 'ebitda_margin', 'operating_margin'], title='Margins by company')
+    create_fig(data, ticker, ['enterprise_to_ebitda', 'beta', 'forward_pe', 'price_to_book'], title='Normalized ratios by company', normalize=True)

@@ -1,78 +1,20 @@
-from bs4 import BeautifulSoup 
-import pandas as pd
-import re
-import requests
 import urllib.request as ur
 import json
+from bs4 import BeautifulSoup 
 
-def get_linked_tickers(ticker_df_in: pd.DataFrame, peer_group:int) -> pd.DataFrame:
-    """This method will look into yahoo finance to extract information about other stocks similar to the main stock (ticker)
 
-    Args:
-        ticker_df_in (pd.DataFrame): The dataframe containing tickers which will be used to look up peers
-        peer_group (int): Iteration of peers - the 'wave' number
-
-    Returns:
-        pd.DataFrame: _description_
-    """
-    ticker_df = ticker_df_in.copy()
-    # print(ticker_df[ticker_df.peer_group==peer_group-1]['ticker'].values)
-    for t in ticker_df[ticker_df.peer_group==peer_group-1]['ticker'].values:
-        url = f'https://finance.yahoo.com/quote/{t}?p={t}'
-        # print(url)
-        try:
-            r = requests.get(url)
-            soup = BeautifulSoup(r.text, 'html.parser')
-            
-            recommendation_table = soup.find(id='similar-by-symbol') # (id='recommendations-by-symbol')
-            for c in recommendation_table.find_all(href=True):
-                quote_link = c['href']
-                x = re.findall('^\/quote\/\w{2,6}', quote_link)
-                linked_symbol = x[0][7:]
-                linked_symbol_dict = {
-                    'ticker': [linked_symbol],
-                    'peer_group': [peer_group]
-                }
-                linked_symbol_df = pd.DataFrame(data=linked_symbol_dict)
-                ticker_df = pd.concat([ticker_df, linked_symbol_df], ignore_index=True)
-            
-        except Exception as e:
-            print(f'It wasn\'t possible to find peers to {t}')
-            # print(e)
-
-    return ticker_df
-
-def create_peer_df(ticker:str, levels:int=3) -> pd.DataFrame:
-    """Creating a single column dataframe containing peers to the ticker.
-
-    Args:
-        ticker (str): The main ticker to look for peers to
-        levels (int, optional): How many iterations of peers it should loop through. Defaults to 3.
-
-    Returns:
-        pd.DataFrame: A single columned dataframe containing unique yahoo finance ticker symbols for peers to the main ticker.
-    """
-    ticker_dict = {
-        'ticker': [ticker],
-        'peer_group': [0]
-    }
-
-    ticker_dataframe = pd.DataFrame.from_dict(ticker_dict)
-    for i in range(1,levels):
-        ticker_dataframe = get_linked_tickers(ticker_df_in=ticker_dataframe, peer_group=i)
-
-    ticker_dataframe = ticker_dataframe.drop(columns=['peer_group']).drop_duplicates().reset_index(drop=True)
-
-    return ticker_dataframe
 
 class stock_info:
     """A class which is used to extract information from Yahoo Finance on a ticker level. The ticker is the primary input of the class.
     The template for the data is: 'https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker}?formatted=true&lang=en-US&region=US&modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2CupgradeDowngradeHistory%2Cearnings%2CdefaultKeyStatistics%2CcalendarEvents&corsDomain=finance.yahoo.com'
     """
     def __init__(self, ticker: str) -> None:
-        self.ticker = ticker
-        self.url = f'https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker}?formatted=true&lang=en-US&region=US&modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2CupgradeDowngradeHistory%2Cearnings%2CdefaultKeyStatistics%2CcalendarEvents&corsDomain=finance.yahoo.com'
-        self._load_json()
+        self.ticker = ticker.upper()
+        try:
+            self.url = f'https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker}?formatted=true&lang=en-US&region=US&modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2CupgradeDowngradeHistory%2Cearnings%2CdefaultKeyStatistics%2CcalendarEvents&corsDomain=finance.yahoo.com'
+            self._load_json()
+        except:
+            self.site_json = {}
         self.currency_conversion = 1.
         self.denominator = 1e9
 
@@ -224,32 +166,9 @@ class stock_info:
         except Exception as e:
             print(f'It wasn\'t possible to load the PB ratio for {self.ticker}', e)
             return None
-    
-def create_peer_universe(ticker:str, levels:int=3) -> pd.DataFrame:
-    df = create_peer_df('LVMUY', levels=levels)
-    cols = [
-        'sector', 'industry', 'currency', 'market_value', 'gross_margin', 
-        'ebitda_margin', 'operating_margin', 'enterprise_to_ebitda', 
-        'beta', 'forward_pe', 'price_to_book'
-    ]
-    df[cols] = None
-    
-    for idx, ticker in enumerate(df.ticker.values):
-        print(f'Starting to load information about {ticker}')
-        stock_info_ticker = stock_info(ticker)
-        df.at[idx, 'sector'] = stock_info_ticker.get_sector()
-        df.at[idx, 'industry'] = stock_info_ticker.get_industry()
-        df.at[idx, 'currency'] = stock_info_ticker.get_currency()
-        df.at[idx, 'market_value'] = stock_info_ticker.get_market_value()
-        df.at[idx, 'gross_margin'] = stock_info_ticker.get_gross_margin()
-        df.at[idx, 'operating_margin'] = stock_info_ticker.get_operating_margin()
-        df.at[idx, 'ebitda_margin'] = stock_info_ticker.get_ebitda_margin()
-        df.at[idx, 'enterprise_to_ebitda'] = stock_info_ticker.get_enterprise_to_ebitda()
-        df.at[idx, 'beta'] = stock_info_ticker.get_beta()
-        df.at[idx, 'forward_pe'] = stock_info_ticker.get_forward_pe()
-        df.at[idx, 'price_to_book'] = stock_info_ticker.get_price_to_book()
-    return df
+
 
 if __name__=='__main__':
-    df = create_peer_universe('LVMUY')
-    print(df)
+    orsted = stock_info('orsted.co')
+    print(orsted.get_beta())
+    print(orsted.get_enterprise_to_ebitda())
