@@ -52,17 +52,51 @@ class valuation_engine:
         cagr = (valuation[-1] / valuation[0])**(1/self.forecast_period)-1
         return cagr
 
-    def cagr_sensitivity(self, sales_growth_range:list=None):
-        for growth_rate in np.linspace(start=sales_growth_range[0], stop=sales_growth_range[1], num=20):
-            cagr = self._calc_cagr(sales_growth_yearly=growth_rate)
-            print(growth_rate, cagr)
+    def cagr_sensitivity(self, sensitivity_ranges:dict=None, steps:int=31):
+        sales_growth_range = 0.02
+        ebit_margin_range = 0.0
+        pe_ratio_range = 0
+        sales_growth = np.column_stack(
+            (
+                list(np.linspace(start=1+self.sales_growth_yearly - sales_growth_range, stop=1+self.sales_growth_yearly + sales_growth_range, num=steps)),
+                list(np.power(np.linspace(start=1+self.sales_growth_yearly - sales_growth_range, stop=1+self.sales_growth_yearly + sales_growth_range, num=steps), self.forecast_period))
+            )
+        ).transpose()
+        ebit_margin = np.column_stack(
+            (
+                list(np.linspace(start=self.ebit_margin_current - ebit_margin_range, stop=self.ebit_margin_current + ebit_margin_range, num=steps)),
+                list(np.linspace(start=self.ebit_margin_future - ebit_margin_range, stop=self.ebit_margin_future + ebit_margin_range, num=steps))
+            )
+        ).transpose()
+        pe_ratio = np.column_stack(
+            (
+                list(np.linspace(start=self.pe_ratio_current - pe_ratio_range, stop=self.pe_ratio_current + pe_ratio_range, num=steps)),
+                list(np.linspace(start=self.pe_ratio_future - pe_ratio_range, stop=self.pe_ratio_future + pe_ratio_range, num=steps))
+            )
+            
+        ).transpose()
+
+        sales = self.current_sales * sales_growth
+        ebit = sales * ebit_margin
+        valuation = ebit * pe_ratio
+        cagrs = (valuation[1] / valuation[0])**(1/self.forecast_period)-1
+
+        df = pd.DataFrame(
+            {
+                'sales_growth': list(np.linspace(start=self.sales_growth_yearly - sales_growth_range, stop=self.sales_growth_yearly + sales_growth_range, num=steps)),
+                'ebit_margin_future': list(np.linspace(start=self.ebit_margin_future - ebit_margin_range, stop=self.ebit_margin_future + ebit_margin_range, num=steps)),
+                'pe_ratio_future': list(np.linspace(start=self.pe_ratio_future - pe_ratio_range, stop=self.pe_ratio_future + pe_ratio_range, num=steps)),
+                'cagr': cagrs
+            }
+        )
+        return df
 
     def get_forecast(self):
         return self.forecasted_df
-'''
+
 ve = valuation_engine(
     sales_growth_yearly = 0.08,
-    ebit_margin_current = 0.076,
+    ebit_margin_current = 0.08,
     ebit_margin_future = 0.08,
     pe_ratio_current = 16.4,
     pe_ratio_future = 16.4,
@@ -70,8 +104,9 @@ ve = valuation_engine(
     forecast_period = 5,
     current_sales = 1000
 )
-ve.cagr_sensitivity(sales_growth_range=[0.06, 0.1])
-'''
+a = ve.cagr_sensitivity(steps=5)
+print(a)
+
 def test():
     forecast_values = 31
     sales_growth = np.column_stack(
@@ -93,5 +128,3 @@ def test():
         }
     )
     print(df)
-
-test()
