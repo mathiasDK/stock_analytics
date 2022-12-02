@@ -71,5 +71,5 @@ def create_peer_df(ticker:str, levels:int=3) -> pd.DataFrame:
     return ticker_dataframe
 
 if __name__=='__main__':
-    df = create_peer_df('LVMUY')
+    df = create_peer_df('VOLCAR-B.ST')
     print(df)
