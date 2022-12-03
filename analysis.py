@@ -8,10 +8,14 @@ import pandas as pd
 
 def create_peer_universe(ticker:str, levels:int=3) -> pd.DataFrame:
     df = create_peer_df(ticker, levels=levels)
+    return df
+
+def add_statistics_to_dataframe(df):
     cols = [
         'sector', 'industry', 'currency', 'market_value', 'gross_margin', 
         'ebitda_margin', 'operating_margin', 'enterprise_to_ebitda', 
-        'beta', 'forward_pe', 'price_to_book'
+        'beta', 'forward_pe', 'price_to_book', 'current_ratio', 'trailing_eps',
+        'debt_to_equity'
     ]
     df[cols] = None
 
@@ -29,6 +33,9 @@ def create_peer_universe(ticker:str, levels:int=3) -> pd.DataFrame:
         df.at[idx, 'beta'] = stock_info_ticker.get_beta()
         df.at[idx, 'forward_pe'] = stock_info_ticker.get_forward_pe()
         df.at[idx, 'price_to_book'] = stock_info_ticker.get_price_to_book()
+        df.at[idx, 'current_ratio'] = stock_info_ticker.get_current_ratio()
+        df.at[idx, 'trailing_eps'] = stock_info_ticker.get_trailing_earnings_per_share()
+        df.at[idx, 'debt_to_equity'] = stock_info_ticker.get_debt_to_equity_ratio()
 
     return df
 
@@ -54,7 +61,10 @@ def create_fig(data_peers:pd.DataFrame, main_ticker:str, metrics:list, title:str
             'enterprise_to_ebitda': 'Enterprise Value to Ebitda', 
             'beta': 'Beta', 
             'forward_pe': 'Forward PE', 
-            'price_to_book': 'Price to Book'
+            'price_to_book': 'Price to Book',
+            'current_ratio': 'Current Ratio',
+            'trailing_eps': 'Trailing Earnings per Share',
+            'debt_to_equity': 'Debt to Equity',
         }, 
         inplace=True
     )
@@ -117,8 +127,15 @@ def create_fig(data_peers:pd.DataFrame, main_ticker:str, metrics:list, title:str
 
 if __name__=='__main__':
     ticker = 'ORSTED.CO'.upper() #'LMVUY'
-    
-    data = create_peer_universe(ticker, 5)
+
+    #ticker_df=create_peer_df(ticker, levels=3)
+    #data = create_peer_universe(ticker, 5)
+    data=pd.DataFrame(
+        data={
+            'ticker': ['VOLCAR-B.ST', 'VOW3.DE', 'PAH3.DE', 'BMW.DE', 'F', 'GM']
+        }
+    )
+    data=add_statistics_to_dataframe(data)
     print(data)
-    create_fig(data, ticker, ['gross_margin', 'ebitda_margin', 'operating_margin'], title='Margins by company')
-    create_fig(data, ticker, ['enterprise_to_ebitda', 'beta', 'forward_pe', 'price_to_book'], title='Normalized ratios by company', normalize=True)
+    create_fig(data, 'VOLCAR-B.ST', ['gross_margin', 'ebitda_margin', 'operating_margin'], title='Margins by company')
+    create_fig(data, 'VOLCAR-B.ST', ['enterprise_to_ebitda', 'beta', 'forward_pe', 'price_to_book', 'debt_to_equity', 'trailing_eps', 'current_ratio'], title='Normalized ratios by company', normalize=True)
