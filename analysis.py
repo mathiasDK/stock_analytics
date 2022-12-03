@@ -61,7 +61,10 @@ def create_fig(data_peers:pd.DataFrame, main_ticker:str, metrics:list, title:str
             'enterprise_to_ebitda': 'Enterprise Value to Ebitda', 
             'beta': 'Beta', 
             'forward_pe': 'Forward PE', 
-            'price_to_book': 'Price to Book'
+            'price_to_book': 'Price to Book',
+            'current_ratio': 'Current Ratio',
+            'trailing_eps': 'Trailing Earnings per Share',
+            'debt_to_equity': 'Debt to Equity',
         }, 
         inplace=True
     )
@@ -135,4 +138,4 @@ if __name__=='__main__':
     data=add_statistics_to_dataframe(data)
     print(data)
     create_fig(data, 'VOLCAR-B.ST', ['gross_margin', 'ebitda_margin', 'operating_margin'], title='Margins by company')
-    create_fig(data, 'VOLCAR-B.ST', ['enterprise_to_ebitda', 'beta', 'forward_pe', 'price_to_book'], title='Normalized ratios by company', normalize=True)
+    create_fig(data, 'VOLCAR-B.ST', ['enterprise_to_ebitda', 'beta', 'forward_pe', 'price_to_book', 'debt_to_equity', 'trailing_eps', 'current_ratio'], title='Normalized ratios by company', normalize=True)

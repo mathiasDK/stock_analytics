@@ -167,6 +167,38 @@ class stock_info:
             print(f'It wasn\'t possible to load the PB ratio for {self.ticker}', e)
             return None
 
+    def get_current_ratio(self) -> float:
+        """Getting the current ratio from the summary of the ticker. Returns None if there is an error while loading
+        Returns:
+            float: The current ratio
+        """
+        try:
+            return self.site_json['quoteSummary']['result'][0]['financialData']['currentRatio']['raw']
+        except Exception as e:
+            print(f'It wasn\'t possible to load the current ratio for {self.ticker}', e)
+            return None
+
+    def get_trailing_earnings_per_share(self) -> float:
+        """Getting the trailing earning per share from the summary of the ticker. Returns None if there is an error while loading
+        Returns:
+            float: The trailing earning per share
+        """
+        try:
+            return self.site_json['quoteSummary']['result'][0]['defaultKeyStatistics']['trailingEps']['raw']
+        except Exception as e:
+            print(f'It wasn\'t possible to load the trailingEps ratio for {self.ticker}', e)
+            return None
+
+    def get_debt_to_equity_ratio(self) -> float:
+        """Getting the debt to equity ratio from the summary of the ticker. Returns None if there is an error while loading
+        Returns:
+            float: The debtToEquity ratio
+        """
+        try:
+            return self.site_json['quoteSummary']['result'][0]['financialData']['debtToEquity']['raw']
+        except Exception as e:
+            print(f'It wasn\'t possible to load the debtToEquity ratio for {self.ticker}', e)
+            return None
 
 if __name__=='__main__':
     orsted = stock_info('orsted.co')
