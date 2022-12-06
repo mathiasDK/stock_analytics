@@ -125,6 +125,15 @@ def create_fig(data_peers:pd.DataFrame, main_ticker:str, metrics:list, title:str
     )
     fig.show()
 
+peer_dict = {
+    'automotive': ['VOLCAR-B.ST', 'VOW3.DE', 'PAH3.DE', 'BMW.DE', 'F', 'GM', 'TM', 'HMC', 'PSNY', 'HOG'],
+    'electric_automotive': ['PSNY', 'TSLA', 'NIO', 'RIVN', 'LCID'],
+    'transportation': ['DSV.CO', 'MAERSK-B.CO','TRMD-A.CO', 'DNORD.CO', 'DFDS.CO', 'NTG.CO', 'FDX'],
+    'healthcare': ['NOVO-B.CO', 'BAVA.CO', 'GMAB.CO', 'SNY', 'AZN', 'JNJ', 'PFE', 'MRK', 'LLY'],
+    'consumer_defensives': ['WMT', 'PG', 'KO', 'PEP', 'COST', 'UL', 'TGT', 'KHC', 'CL', 'K', 'CARL-B.CO', 'RBREW.CO'],
+    'beverages': ['PEP', 'KO', 'CARL-B.CO', 'RBREW.CO', 'SAM']
+}
+
 if __name__=='__main__':
     ticker = 'ORSTED.CO'.upper() #'LMVUY'
 
@@ -132,10 +141,9 @@ if __name__=='__main__':
     #data = create_peer_universe(ticker, 5)
     data=pd.DataFrame(
         data={
-            'ticker': ['VOLCAR-B.ST', 'VOW3.DE', 'PAH3.DE', 'BMW.DE', 'F', 'GM']
+            'ticker': peer_dict.get('electric_automotive') #['VOLCAR-B.ST', 'VOW3.DE', 'PAH3.DE', 'BMW.DE', 'F', 'GM']
         }
     )
     data=add_statistics_to_dataframe(data)
-    print(data)
-    create_fig(data, 'VOLCAR-B.ST', ['gross_margin', 'ebitda_margin', 'operating_margin'], title='Margins by company')
-    create_fig(data, 'VOLCAR-B.ST', ['enterprise_to_ebitda', 'beta', 'forward_pe', 'price_to_book', 'debt_to_equity', 'trailing_eps', 'current_ratio'], title='Normalized ratios by company', normalize=True)
+    create_fig(data, 'PSNY', ['gross_margin', 'ebitda_margin', 'operating_margin'], title='Margins by company')
+    create_fig(data, 'PSNY', ['enterprise_to_ebitda', 'beta', 'forward_pe', 'price_to_book', 'debt_to_equity', 'trailing_eps', 'current_ratio'], title='Normalized ratios by company', normalize=True)
