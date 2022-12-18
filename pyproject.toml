@@ -1,0 +1,18 @@
+stock_analytics
+name = "stock_analytics_mathiasdk"
+version = "0.0.1"
+authors = [
+  { name="Mathias Nørskov"},
+]
+description = "A package for doing stock analytics."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/mathiasDK/stock_analytics"
+"Bug Tracker" = "https://github.com/mathiasDK/stock_analytics/issues"
