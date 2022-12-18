@@ -1,7 +1,5 @@
 import numpy as np
 
-np.random.seed(123)
-
 class forecast_financials:
     # Source of inspiration: https://www.linkedin.com/pulse/how-assess-value-company-combining-discounted-cash-anthony/
     
