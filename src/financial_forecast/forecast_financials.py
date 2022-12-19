@@ -27,7 +27,7 @@ class forecast_financials:
             'current_dep_amort', 'estimated_future_dep_amort', 'estimated_future_dep_amort_uncertainty',
             'current_interest_expense', 'estimated_future_interest_expense', 'estimated_future_interest_expense_uncertainty',
             'current_nwc', 'estimated_future_nwc', 'estimated_future_nwc_uncertainty',
-            'n_periods', 'n_shares', 'wacc', 'perpetual_rate', 'n_samples'
+            'n_periods', 'n_shares', 'wacc', 'perpetual_rate', 'n_samples', 'tax_rate'
         ]
         for arg in valid_args:
             setattr(self, arg, kwargs.get(arg))
@@ -148,3 +148,41 @@ def cagr(start_value, end_value, periods)->float:
     # Make sure that it can handle negative start or end values.
     cagr=(end_value*1./start_value)**(1./periods)-1
     return cagr
+
+if __name__ == '__main__':
+    current_revenue=2200
+    estimated_future_revenue = 1103e9*0.5*0.05*0.689/1e6
+    ff=forecast_financials(
+        **{
+            'current_revenue': current_revenue,
+            'estimated_future_revenue': estimated_future_revenue,
+            'estimated_future_revenue_uncertainty': estimated_future_revenue*0.25,
+            'n_periods': 8, 
+            'n_shares': 2.11e3,
+            'wacc': 0.08,
+            'perpetual_rate': 0.015,
+            'n_samples': 10000,
+            'tax_rate':0.2,
+
+            'current_gross_margin': 0.039,
+            'estimated_gross_margin': 0.2,
+            'estimated_gross_margin_uncertainty': 0.03,
+
+            'current_sga_cost': current_revenue*0.423, 
+            'estimated_future_sga_cost': estimated_future_revenue*0.1, 
+            'estimated_future_sga_cost_uncertainty': estimated_future_revenue*0.1*0,
+
+            'current_dep_amort': current_revenue*0.1, 
+            'estimated_future_dep_amort': estimated_future_revenue*0.1, 
+            'estimated_future_dep_amort_uncertainty': estimated_future_revenue*0.1*0, 
+            
+            'current_interest_expense': current_revenue*0.05, 
+            'estimated_future_interest_expense': estimated_future_revenue*0.02, 
+            'estimated_future_interest_expense_uncertainty': estimated_future_revenue*0.02*0,
+
+            'current_nwc': 1.3, 
+            'estimated_future_nwc': 6, 
+            'estimated_future_nwc_uncertainty': 1,
+        }
+    )
+    ff.get_company_value()
