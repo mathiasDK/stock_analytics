@@ -1,9 +1,9 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "pandas", "numpy", "plotly"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "stock_analytics_mathiasdk"
+name = "stockafp" # stock - analytics, forecasts and plots
 version = "0.0.1"
 authors = [
   { name="Mathias Nørskov"},
@@ -16,6 +16,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+[options]
+package_dir=
+    =src
 
 [project.urls]
 "Homepage" = "https://github.com/mathiasDK/stock_analytics"
