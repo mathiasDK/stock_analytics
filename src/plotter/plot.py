@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
-
-
+import plotly.express as px
+import plotly.io as pio
 
 class plot:
     """
@@ -20,17 +20,18 @@ class plot:
         self.font_size = font_size
         self.show_fig = show_fig
         self.margin = {
-            't': 100,
-            'b': 100,
-            'l': 100,
-            'r': 100
+            't': 30,
+            'b': 10,
+            'l': 10,
+            'r': 10
         }
         self.font_family = 'Arial'
         self.colorDict = {
                 'primary': '#1C4C38', 
                 'secondary': '#005288',
                 'first_grey': '#C4C4C4', 
-                'light_grey': '#f9f9f9'
+                'light_grey': '#f9f9f9',
+                'white_background': '#faf8f0'
         }
         self.colorList = [
                 '#005288', 
@@ -38,8 +39,8 @@ class plot:
                 '#01B2B3', 
                 '#DD663C', 
                 '#A899A5', 
-                '#492a42', 
                 '#d8eded', 
+                '#492a42', 
                 '#bdd7e5'
             ]
         self.show_legend = True
@@ -53,8 +54,8 @@ class plot:
         layout = go.Layout(
             height=self.height,
             width=self.width,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor=self.colorDict.get('white_background'),
+            plot_bgcolor=self.colorDict.get('white_background'),
             title=dict(
                 font=dict(
                     color='#000000',
@@ -73,6 +74,47 @@ class plot:
         self.fig.update_layout(layout)
         self.fig.update_xaxes(linewidth = 1, linecolor ='black', tickfont=dict(family=self.font_family, color='#000000', size=self.tick_size))
         self.fig.update_yaxes(linewidth = 1, linecolor = 'black', tickfont=dict(family=self.font_family, color='#000000', size=self.tick_size))
+
+    def get_layout(self, x_label=None, y_label=None, title=None, legend_title=None) -> None:
+        """
+        A function to format the plot into the chosen layout
+        It should be run after each plotting function.
+        """
+
+        layout = go.Layout(
+            height=self.height,
+            width=self.width,
+            paper_bgcolor=self.colorDict.get('white_background'),
+            plot_bgcolor=self.colorDict.get('white_background'),
+            title=dict(
+                font=dict(
+                    color='#000000',
+                    size=self.title_size
+                ),
+                text=title
+            ),
+            margin=self.margin,
+            xaxis_title=x_label,
+            yaxis_title=y_label,
+            legend_title=legend_title,
+            showlegend=self.show_legend,
+            colorway=self.colorList
+        )
+
+        self.fig.update_layout(layout)
+        self.fig.update_xaxes(linewidth = 1, linecolor ='black', tickfont=dict(family=self.font_family, color='#000000', size=self.tick_size), showgrid=False)
+        self.fig.update_yaxes(linewidth = 1, linecolor = 'black', tickfont=dict(family=self.font_family, color='#000000', size=self.tick_size), showgrid=False)
+
+        """
+        try:
+            colormap={}
+            for i in range(len(self.fig.data)):
+                key=self.fig.data[i]['name']
+                colormap[key]=self.colorList[i]
+        """
+
+        return self.fig.layout
+
 
     def _set_end_label(self, x, y, text, color):
         """
@@ -103,189 +145,47 @@ class plot:
         )
         self.show_legend=False
 
-    def bar_grouped(self, x:list, y:list, group:list, barmode:str='stack', x_title:str=None, y_title:str=None, title:str=None, colors:list=None, texttemplate:str=None, annotation:bool=False)->go.Figure():
+    def to_and_from_lines_text(
+        self, 
+        x_start=None, x_end=None, text="",
+        x_start_index:float=None, x_end_index:float=None,
+        y:float=None, y_start:float=None, y_end:float=None, y_offset:float=0.1,
+        **kwargs)->None:
         
-        groups = list(dict.fromkeys(group))   
-        group_indexex = [{group_value: [i for i, x in enumerate(group) if x==group_value]} for group_value in groups] 
-        if colors is None:
-            colors = [None] * len(groups)
+        # Setting the variables:
+        x_start=self.fig.data['x'].index(x_start) if x_start is not None else x_start_index
+        x_end=self.fig.data['x'].index(x_end) if x_end is not None else x_end_index
+        y_start_start=y_start if y_start is not None else y*(1-y_offset)
+        y_end_start=y_end if y_end is not None else y*(1-y_offset)
 
-        for group_value, color in zip(group_indexex, colors):
-            for group_name, index in group_value.items():
-                x_list = [x[i] for i in index]
-                y_list = [y[i] for i in index]
-                if annotation:
-                    y_text = y_list
-                else:
-                    y_text = None
-
-                self.fig.add_trace(
-                    go.Bar(
-                        x=x_list, y=y_list,
-                        text=y_text,
-                        texttemplate=texttemplate,
-                        name=group_name,
-                        marker=dict(color=color),
-
-                        # Creating pretty hover boxes
-                        customdata=[group_name]*len(y_list),
-                        hovertemplate = "%{customdata}: %{y}<extra></extra>"
-                    )
-                )
-
-        self._set_layout(x_label=x_title, y_label=y_title, title=title)
-        self.fig.update_layout(barmode=barmode)
-        if self.show_fig:
-            self.fig.show()
-
-        return self.fig
-
-    def bar(self, x, y, x_title:str=None, y_title:str=None, title:str=None, annotation:bool=False, annotation_format:str=None, type:str='category')->go.Figure():
-        """Creating a bar plot
-
-        Args:
-            x (list): List of x values
-            y (list): List of y values
-            x_title (str, optional): Label on the x axis. Defaults to None.
-            y_title (str, optional): Label on the y axis. Defaults to None.
-            title (str, optional): Plot title. Defaults to None.
-            annotation (bool, optional): If the bars should have annotation. Defaults to False.
-            annotation_format (str, optional): The format of the annotation, e.g. % or #. Defaults to None.
-        
-        Returns:
-            go.Figure: The figure just created
-        """
-        self.fig.add_trace(
-            go.Bar(
-                x=x,
-                y=y,
-
-                # Creating pretty hover boxes
-                hovertemplate = "%{y}<extra></extra>"
-            )
+        self.fig.add_shape( # First upright line
+            type='line',
+            x0=x_start, x1=x_start,
+            y0=y_start_start, y1=y,
+            line=dict(color="#000000",width=1),
+            **kwargs
         )
-        if annotation:
-            self.fig.update_traces(
-                text=y,
-                textposition='outside',
-                texttemplate=annotation_format
-            )
-
-            # Making sure that there is enough room for the annotations
-            y_lower = min(y)
-            if y_lower < 0:
-                y_lower *= 1.2
-            else:
-                y_lower = 0
-            y_upper = max(y)
-            if y_upper > 0:
-                y_upper *= 1.2
-            else:
-                y_upper = 0
-
-
-            self.fig.update_layout(
-                yaxis=dict(
-                    range=[y_lower, y_upper]
-                )
-            )
-
-        self._set_layout(x_label=x_title, y_label=y_title, title=title)
-        self.fig.update_layout(
-            showlegend=False,
-            xaxis=dict(
-                type=type
-            )
+        self.fig.add_shape( # Last upright line
+            type='line',
+            x0=x_end, x1=x_end,
+            y0=y_end_start, y1=y,
+            line=dict(color="#000000",width=1),
+            **kwargs
         )
-        if self.show_fig:
-            self.fig.show()
-
-        return self.fig
-
-    def continuous_grouped(self, x, y, group, mode='lines', colors=None, x_title: str=None, y_title: str=None, title: str=None, end_annotation: bool=False):
-        """Building a plot with multiple line plots
-
-        Args:
-            x (list): List of x values
-            y (list): List of y values
-            group (list): List of grouping
-            mode (str, optional): The scatter plot type. Defaults to 'lines'.
-            colors (list, optional): List of colors for the groups. Defaults to None.
-            x_title (str, optional): X title. Defaults to None.
-            y_title (str, optional): Y title. Defaults to None.
-            title (str, optional): Plot title. Defaults to None.
-            end_annotation (bool, optional): If there should be an end annotation to the lines. Defaults to False.
-
-        Returns:
-            go.Figure: The figure just created.
-        """
-        groups = list(dict.fromkeys(group))   
-        group_indexex = [{group_value: [i for i, x in enumerate(group) if x==group_value]} for group_value in groups] 
-        if colors is None:
-            colors = [None] * len(groups)
-
-        for group_value, color in zip(group_indexex, colors):
-            for group_name, index in group_value.items():
-                x_list = [x[i] for i in index]
-                y_list = [y[i] for i in index]
-
-                self.fig.add_trace(
-                    go.Scatter(
-                        x=x_list, y=y_list,
-                        mode=mode,
-                        name=group_name,
-                        marker=dict(color=color),
-
-                        # Creating pretty hover boxes
-                        customdata=[group_name]*len(y_list),
-                        hovertemplate = "%{customdata}: %{y}<extra></extra>"
-                    )
-                )
-            
-                if end_annotation:
-                    self._set_end_label(x=x_list[-1], y=y_list[-1], text=group_name, color=color)
-
-        self._set_layout(x_label=x_title, y_label=y_title, title=title)
-        if self.show_fig:
-            self.fig.show()
-
-        return self.fig
-    
-
-    def continuous(self, x, y, name=None, mode='lines', x_title=None, y_title=None, title=None, end_annotation=False):
-        self.fig.add_trace(
-            go.Scatter(
-                x=x, y=y,
-                mode=mode,
-                name=name,
-                marker=dict(color=self.colorDict.get('primary')),
-
-                # Creating pretty hover boxes
-                hovertemplate = "%{y}<extra></extra>"
-            )
+        self.fig.add_shape( # Horizontal line
+            type='line',
+            x0=x_start, x1=x_end,
+            y0=y, y1=y,
+            line=dict(color="#000000",width=1),
+            **kwargs
+        ),
+        self.fig.add_annotation(
+            text=text,
+            x=(x_end-x_start)/2.+x_start,
+            y=y,
+            bgcolor=self.colorDict.get('white_background'),
+            showarrow=False,
+            borderpad=8,
+            font=dict(size=self.font_size+2, color='#000000'),
+            **kwargs
         )
-        self._set_layout(x_label=x_title, y_label=y_title, title=title)
-        
-        if end_annotation:
-            self._set_end_label(x=x[-1], y=y[-1], text=name, color=self.colorDict.get('primary'))
-
-        self._set_layout(x_label=x_title, y_label=y_title, title=title)
-        if self.show_fig:
-            self.fig.show()
-
-        return self.fig
-        
-
-def main():
-    x = [1,2,3,1,2,3]
-    y = [1,2,2,2,3,5]
-    group = ['a', 'a', 'a', 'b', 'b', 'b'] 
-    #colors=['red', 'blue']
-    #plot(show_fig=True).continuous_grouped(x, y, group=group, end_annotation=True)
-    #plot(show_fig=True).continuous(x[:3], y[:3], end_annotation=True)
-
-    #plot(show_fig=True).bar_grouped(x, y, group, annotation=True)
-    plot(show_fig=True).bar(x[:3], y[:3], annotation=True)
-
-if __name__=='__main__':
-    main()
