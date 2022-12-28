@@ -39,8 +39,8 @@ class plot:
                 '#01B2B3', 
                 '#DD663C', 
                 '#A899A5', 
-                '#492a42', 
                 '#d8eded', 
+                '#492a42', 
                 '#bdd7e5'
             ]
         self.show_legend = True
@@ -189,35 +189,3 @@ class plot:
             font=dict(size=self.font_size+2, color='#000000'),
             **kwargs
         )
-
-import plotly_theme
-def main():
-    x = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'] 
-    y = [1,2,3,4,5,6,7,8,9]
-    group = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'] 
-    
-
-    # fig=go.Figure()
-    # # fig.layout=plot(fig).get_layout(title='TEST TITLE', x_label='X axis', y_label='Y axis')
-    # # for x_val,y_val,name in zip(x,y,group):
-    # #     fig.add_traces(go.Bar(x=[x_val], y=[y_val], name='a', marker_line=dict(width=0.5, color='#222222')))
-    # fig.add_trace(go.Bar(x=x, y=y, marker_line=dict(width=5.5, color='#995599')))
-
-    # # fig_obj=plot(fig)
-    # # fig_obj.to_and_from_lines_text(x_start_index=1, x_end_index=4, text="TEST", y=5)
-    # # fig=fig_obj.fig
-    # print(fig.layout.template)
-    # fig.show()
-    # print(templated_fig.layout.template)
-    # template=pio.to_templated(fig.layout)
-    # print(template)
-    fig=px.bar(x=x, y=y, color=group, template="master")
-    # print(fig.layout.template.layout)
-    fig.show()
-    fig=px.line(x=x, y=y, template="master")
-    # print(fig.layout.template.layout)
-    fig.show()
-
-
-if __name__=='__main__':
-    main()
