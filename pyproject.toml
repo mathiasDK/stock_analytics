@@ -17,10 +17,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[options]
-package_dir=
-    =src
-
 [project.urls]
 "Homepage" = "https://github.com/mathiasDK/stock_analytics"
 "Bug Tracker" = "https://github.com/mathiasDK/stock_analytics/issues"

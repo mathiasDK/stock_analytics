@@ -1,5 +1,6 @@
 from .information_load import stock_info
 from .peer_universe import get_linked_tickers
+
 # if __name__=='__main__':
 # import create_peer_df
 # import stock_info
@@ -12,12 +13,12 @@ from .peer_universe import get_linked_tickers
 # def create_peer_universe(ticker:str, levels:int=3) -> pd.DataFrame:
 #     df = create_peer_df(ticker, levels=levels)
 #     cols = [
-#         'sector', 'industry', 'currency', 'market_value', 'gross_margin', 
-#         'ebitda_margin', 'operating_margin', 'enterprise_to_ebitda', 
+#         'sector', 'industry', 'currency', 'market_value', 'gross_margin',
+#         'ebitda_margin', 'operating_margin', 'enterprise_to_ebitda',
 #         'beta', 'forward_pe', 'price_to_book'
 #     ]
 #     df[cols] = None
-    
+
 #     for idx, ticker in enumerate(df.ticker.values):
 #         print(f'Starting to load information about {ticker}')
 #         stock_info_ticker = stock_info(ticker)

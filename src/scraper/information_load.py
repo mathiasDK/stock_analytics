@@ -1,21 +1,21 @@
 import urllib.request as ur
 import json
-from bs4 import BeautifulSoup 
-
+from bs4 import BeautifulSoup
 
 
 class stock_info:
     """A class which is used to extract information from Yahoo Finance on a ticker level. The ticker is the primary input of the class.
     The template for the data is: 'https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker}?formatted=true&lang=en-US&region=US&modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2CupgradeDowngradeHistory%2Cearnings%2CdefaultKeyStatistics%2CcalendarEvents&corsDomain=finance.yahoo.com'
     """
+
     def __init__(self, ticker: str) -> None:
         self.ticker = ticker.upper()
         try:
-            self.url = f'https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker}?formatted=true&lang=en-US&region=US&modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2CupgradeDowngradeHistory%2Cearnings%2CdefaultKeyStatistics%2CcalendarEvents&corsDomain=finance.yahoo.com'
+            self.url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker}?formatted=true&lang=en-US&region=US&modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2CupgradeDowngradeHistory%2Cearnings%2CdefaultKeyStatistics%2CcalendarEvents&corsDomain=finance.yahoo.com"
             self._load_json()
         except:
             self.site_json = {}
-        self.currency_conversion = 1.
+        self.currency_conversion = 1.0
         self.denominator = 1e9
 
     def _load_json(self) -> json:
@@ -25,10 +25,10 @@ class stock_info:
             json: The json which contains data about the ticker
         """
         read_data = ur.urlopen(self.url).read()
-        soup = BeautifulSoup(read_data,'html.parser')
-        site_json=json.loads(soup.text)
+        soup = BeautifulSoup(read_data, "html.parser")
+        site_json = json.loads(soup.text)
         self.site_json = site_json
-    
+
     def get_sector(self) -> str:
         """Getting the sector from the summary of the ticker. Returns None if there is an error while loading
 
@@ -36,9 +36,11 @@ class stock_info:
             str: The sector
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['summaryProfile']['sector']
+            return self.site_json["quoteSummary"]["result"][0]["summaryProfile"][
+                "sector"
+            ]
         except:
-            print(f'It wasn\'t possible to load the sector for {self.ticker}')
+            print(f"It wasn't possible to load the sector for {self.ticker}")
             return None
 
     def get_industry(self) -> str:
@@ -48,9 +50,11 @@ class stock_info:
             str: The industry
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['summaryProfile']['industry']
+            return self.site_json["quoteSummary"]["result"][0]["summaryProfile"][
+                "industry"
+            ]
         except:
-            print(f'It wasn\'t possible to load the industry for {self.ticker}')
+            print(f"It wasn't possible to load the industry for {self.ticker}")
             return None
 
     def get_currency(self) -> str:
@@ -60,17 +64,21 @@ class stock_info:
             str: The currency
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['earnings']['financialCurrency']
+            return self.site_json["quoteSummary"]["result"][0]["earnings"][
+                "financialCurrency"
+            ]
         except:
-            try: 
-                return self.site_json['quoteSummary']['result'][0]['financialData']['financialCurrency']
+            try:
+                return self.site_json["quoteSummary"]["result"][0]["financialData"][
+                    "financialCurrency"
+                ]
             except Exception as e:
-                print(f'It wasn\'t possible to load the currency for {self.ticker}', e)
+                print(f"It wasn't possible to load the currency for {self.ticker}", e)
                 return None
 
     def get_market_value(self) -> float:
         """Getting the market_value from the summary of the ticker. Returns None if there is an error while loading
-        
+
         To do:
         - Should be able to handle local currency conversion, so the numbers are comparable
 
@@ -78,9 +86,15 @@ class stock_info:
             str: The market value
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['defaultKeyStatistics']['enterpriseValue']['raw'] * self.currency_conversion / self.denominator
+            return (
+                self.site_json["quoteSummary"]["result"][0]["defaultKeyStatistics"][
+                    "enterpriseValue"
+                ]["raw"]
+                * self.currency_conversion
+                / self.denominator
+            )
         except:
-            print(f'It wasn\'t possible to load the market value for {self.ticker}')
+            print(f"It wasn't possible to load the market value for {self.ticker}")
             return None
 
     def get_gross_margin(self) -> float:
@@ -90,10 +104,12 @@ class stock_info:
             float: The gross margin
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['financialData']['grossMargins']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["financialData"][
+                "grossMargins"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the gross margin for {self.ticker}', e)
-            return None    
+            print(f"It wasn't possible to load the gross margin for {self.ticker}", e)
+            return None
 
     def get_ebitda_margin(self) -> float:
         """Getting the ebitda margin from the summary of the ticker. Returns None if there is an error while loading
@@ -102,11 +118,13 @@ class stock_info:
             float: The ebitda margin
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['financialData']['ebitdaMargins']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["financialData"][
+                "ebitdaMargins"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the ebitda margin for {self.ticker}', e)
+            print(f"It wasn't possible to load the ebitda margin for {self.ticker}", e)
             return None
-    
+
     def get_operating_margin(self) -> float:
         """Getting the ebitda margin from the summary of the ticker. Returns None if there is an error while loading
 
@@ -114,9 +132,13 @@ class stock_info:
             float: The opearting margin
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['financialData']['operatingMargins']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["financialData"][
+                "operatingMargins"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the operating margin for {self.ticker}', e)
+            print(
+                f"It wasn't possible to load the operating margin for {self.ticker}", e
+            )
             return None
 
     def get_enterprise_to_ebitda(self) -> float:
@@ -126,9 +148,14 @@ class stock_info:
             float: The market cap to ebitda
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['defaultKeyStatistics']['enterpriseToEbitda']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["defaultKeyStatistics"][
+                "enterpriseToEbitda"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the enterprise value to ebitda ratio for {self.ticker}', e)
+            print(
+                f"It wasn't possible to load the enterprise value to ebitda ratio for {self.ticker}",
+                e,
+            )
             return None
 
     def get_beta(self) -> float:
@@ -138,9 +165,11 @@ class stock_info:
             float: The beta
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['defaultKeyStatistics']['beta']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["defaultKeyStatistics"][
+                "beta"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the beta for {self.ticker}', e)
+            print(f"It wasn't possible to load the beta for {self.ticker}", e)
             return None
 
     def get_forward_pe(self) -> float:
@@ -150,9 +179,13 @@ class stock_info:
             float: The forward PE ratio
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['defaultKeyStatistics']['forwardPE']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["defaultKeyStatistics"][
+                "forwardPE"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the forward PE ratio for {self.ticker}', e)
+            print(
+                f"It wasn't possible to load the forward PE ratio for {self.ticker}", e
+            )
             return None
 
     def get_price_to_book(self) -> float:
@@ -162,9 +195,11 @@ class stock_info:
             float: The PB ratio
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['defaultKeyStatistics']['priceToBook']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["defaultKeyStatistics"][
+                "priceToBook"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the PB ratio for {self.ticker}', e)
+            print(f"It wasn't possible to load the PB ratio for {self.ticker}", e)
             return None
 
     def get_current_ratio(self) -> float:
@@ -173,9 +208,11 @@ class stock_info:
             float: The current ratio
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['financialData']['currentRatio']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["financialData"][
+                "currentRatio"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the current ratio for {self.ticker}', e)
+            print(f"It wasn't possible to load the current ratio for {self.ticker}", e)
             return None
 
     def get_trailing_earnings_per_share(self) -> float:
@@ -184,9 +221,13 @@ class stock_info:
             float: The trailing earning per share
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['defaultKeyStatistics']['trailingEps']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["defaultKeyStatistics"][
+                "trailingEps"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the trailingEps ratio for {self.ticker}', e)
+            print(
+                f"It wasn't possible to load the trailingEps ratio for {self.ticker}", e
+            )
             return None
 
     def get_debt_to_equity_ratio(self) -> float:
@@ -195,12 +236,18 @@ class stock_info:
             float: The debtToEquity ratio
         """
         try:
-            return self.site_json['quoteSummary']['result'][0]['financialData']['debtToEquity']['raw']
+            return self.site_json["quoteSummary"]["result"][0]["financialData"][
+                "debtToEquity"
+            ]["raw"]
         except Exception as e:
-            print(f'It wasn\'t possible to load the debtToEquity ratio for {self.ticker}', e)
+            print(
+                f"It wasn't possible to load the debtToEquity ratio for {self.ticker}",
+                e,
+            )
             return None
 
-if __name__=='__main__':
-    orsted = stock_info('orsted.co')
+
+if __name__ == "__main__":
+    orsted = stock_info("orsted.co")
     print(orsted.get_beta())
     print(orsted.get_enterprise_to_ebitda())
