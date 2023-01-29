@@ -91,6 +91,23 @@ class forecast_financials:
         else:
             raise Exception('Please set nwc targets first using the set_nwc() function.')
 
+    def get_gross_margin(self)->np.ndarray:
+        revenue=self.get_revenue()
+        gross_profit=self.get_gross_profit()
+
+        gross_margin = gross_profit / revenue
+        return gross_margin
+    
+    def get_ebit_margin(self)->np.ndarray:
+        revenue=self.get_revenue()
+        gross_profit=self.get_gross_profit()
+        sga=-1*self.get_sga()
+        dep_amort=self.get_dep_amort()
+        ebit = gross_profit + sga + dep_amort
+
+        ebit_margin = ebit / revenue
+        return ebit_margin
+
     def get_net_income(self)->np.ndarray:
         gross_profit=self.get_gross_profit()
         sga=-1*self.get_sga()
