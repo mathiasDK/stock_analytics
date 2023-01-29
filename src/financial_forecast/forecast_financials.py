@@ -90,13 +90,6 @@ class forecast_financials:
             return estimated_nwc_matrix
         else:
             raise Exception('Please set nwc targets first using the set_nwc() function.')
-
-    def get_gross_margin(self)->np.ndarray:
-        revenue=self.get_revenue()
-        gross_profit=self.get_gross_profit()
-
-        gross_margin = gross_profit / revenue
-        return gross_margin
     
     def get_ebit_margin(self)->np.ndarray:
         revenue=self.get_revenue()
@@ -203,3 +196,4 @@ if __name__ == '__main__':
         }
     )
     ff.get_company_value()
+    
