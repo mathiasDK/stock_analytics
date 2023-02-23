@@ -100,7 +100,7 @@ pio.templates["master"] = go.layout.Template(
                          'linewidth': 1,
                          'showgrid': False,
                          'showline': True,
-                         'tickfont': {'color': '#000000', 'family': 'Arial', 'size': 10},
+                         'tickfont': {'color': '#000000', 'family': 'Arial', 'size': 12},
                          'ticks': '',
                          'title': {'standoff': 15},
                          'zerolinecolor': 'black',
@@ -111,9 +111,10 @@ pio.templates["master"] = go.layout.Template(
                          'linewidth': 1,
                          'showgrid': False,
                          'showline': True,
-                         'tickfont': {'color': '#000000', 'family': 'Arial', 'size': 10},
+                         'tickfont': {'color': '#000000', 'family': 'Arial', 'size': 12},
                          'ticks': '',
                          'title': {'standoff': 15},
                          'zerolinecolor': 'black',
+                         'rangemode': 'tozero',
                          'zerolinewidth': 1}}
 )

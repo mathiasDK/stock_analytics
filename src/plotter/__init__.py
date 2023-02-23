@@ -1,2 +1,1 @@
-from plot import plot
-import plotly_theme
+from .plot import plot
