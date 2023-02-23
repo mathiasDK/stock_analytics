@@ -1,1 +1,1 @@
-from .forecast_financials import forecast_financials
+from .forecast_financials import ForecastFinancial
