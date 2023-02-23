@@ -1,10 +1,35 @@
 import numpy as np
 
-
-class forecast_financials:
+class ForecastFinancial:
     # Source of inspiration: https://www.linkedin.com/pulse/how-assess-value-company-combining-discounted-cash-anthony/
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(
+        self, 
+        current_revenue=None,
+        estimated_future_revenue=None,
+        estimated_future_revenue_uncertainty=None,
+        current_gross_margin=None,
+        estimated_gross_margin=None,
+        estimated_gross_margin_uncertainty=None,
+        current_sga_cost=None,
+        estimated_future_sga_cost=None,
+        estimated_future_sga_cost_uncertainty=None,
+        current_dep_amort=None,
+        estimated_future_dep_amort=None,
+        estimated_future_dep_amort_uncertainty=None,
+        current_interest_expense=None,
+        estimated_future_interest_expense=None,
+        estimated_future_interest_expense_uncertainty=None,
+        current_nwc=None,
+        estimated_future_nwc=None,
+        estimated_future_nwc_uncertainty=None,
+        n_periods=None,
+        n_shares=None,
+        wacc=None,
+        perpetual_rate=None,
+        n_samples=10000,
+        tax_rate=None,
+        **kwargs) -> None:
         """This function will forecast the financials of a company with a given set of input and then do a set of simulations with some different scenarios to get
         the most accurate picture of where a company x periods into the future.
 
@@ -21,40 +46,36 @@ class forecast_financials:
             - uncertainty_pct (float, optional): This is used to calculate a standard deviation of the gross profit. Defaults to 0.2.
         """
 
-        valid_args = [
-            "current_revenue",
-            "estimated_future_revenue",
-            "estimated_future_revenue_uncertainty",
-            "current_gross_margin",
-            "estimated_gross_margin",
-            "estimated_gross_margin_uncertainty",
-            "current_sga_cost",
-            "estimated_future_sga_cost",
-            "estimated_future_sga_cost_uncertainty",
-            "current_dep_amort",
-            "estimated_future_dep_amort",
-            "estimated_future_dep_amort_uncertainty",
-            "current_interest_expense",
-            "estimated_future_interest_expense",
-            "estimated_future_interest_expense_uncertainty",
-            "current_nwc",
-            "estimated_future_nwc",
-            "estimated_future_nwc_uncertainty",
-            "n_periods",
-            "n_shares",
-            "wacc",
-            "perpetual_rate",
-            "n_samples",
-            "tax_rate",
-        ]
-        for arg in valid_args:
-            setattr(self, arg, kwargs.get(arg))
+        self.current_revenue=current_revenue
+        self.estimated_future_revenue=estimated_future_revenue
+        self.estimated_future_revenue_uncertainty=estimated_future_revenue_uncertainty
+        self.current_gross_margin=current_gross_margin
+        self.estimated_gross_margin=estimated_gross_margin
+        self.estimated_gross_margin_uncertainty=estimated_gross_margin_uncertainty
+        self.current_sga_cost=current_sga_cost
+        self.estimated_future_sga_cost=estimated_future_sga_cost
+        self.estimated_future_sga_cost_uncertainty=estimated_future_sga_cost_uncertainty
+        self.current_dep_amort=current_dep_amort
+        self.estimated_future_dep_amort=estimated_future_dep_amort
+        self.estimated_future_dep_amort_uncertainty=estimated_future_dep_amort_uncertainty
+        self.current_interest_expense=current_interest_expense
+        self.estimated_future_interest_expense=estimated_future_interest_expense
+        self.estimated_future_interest_expense_uncertainty=estimated_future_interest_expense_uncertainty
+        self.current_nwc=current_nwc
+        self.estimated_future_nwc=estimated_future_nwc
+        self.estimated_future_nwc_uncertainty=estimated_future_nwc_uncertainty
+        self.n_periods=n_periods
+        self.n_shares=n_shares
+        self.wacc=wacc
+        self.perpetual_rate=perpetual_rate
+        self.n_samples=n_samples
+        self.tax_rate=tax_rate
 
         self.arr_periods = np.ones((self.n_samples, self.n_periods)) * np.linspace(
             1, self.n_periods, self.n_periods
         )
 
-    def get_revenue(self) -> np.ndarray:
+    def get_revenue(self, best_case=None, middle_case=None, worst_case=None, uncertainty=None) -> np.ndarray:
         """Create a matrix with a shape of n_samples*n_periods with the estimated revenue in each period for each simulation.
         Each simulation has a CAGR and that CAGR is used for the growth rate of revenue.
 
@@ -64,6 +85,41 @@ class forecast_financials:
         Returns:
             np.ndarray: An array with shape n_samples*n_periods with the estimated revenue in each period for each simulation.
         """
+        if best_case:
+            best_revenue_matrix = self._estimated_matrix(
+                best_case,
+                best_case * uncertainty,
+                self.current_revenue,
+            )
+            try:
+                estimated_revenue_matrix = np.append([estimated_revenue_matrix, best_revenue_matrix], axis=0)
+            except:
+                estimated_revenue_matrix = best_revenue_matrix
+        if middle_case:
+            middle_revenue_matrix = self._estimated_matrix(
+                middle_case,
+                middle_case * uncertainty,
+                self.current_revenue,
+            )
+            try:
+                estimated_revenue_matrix = np.append([estimated_revenue_matrix, middle_revenue_matrix], axis=0)
+            except:
+                estimated_revenue_matrix = middle_revenue_matrix
+        if worst_case:
+            worst_revenue_matrix = self._estimated_matrix(
+                worst_case,
+                worst_case * uncertainty,
+                self.current_revenue,
+            )
+            try:
+                estimated_revenue_matrix = np.append([estimated_revenue_matrix, worst_revenue_matrix], axis=0)
+            except:
+                estimated_revenue_matrix = worst_revenue_matrix
+        if best_case or middle_case or worst_case:
+            mask = np.random.randint(len(estimated_revenue_matrix), size=len(estimated_revenue_matrix))<self.n_samples
+            estimated_revenue_matrix = estimated_revenue_matrix[mask]
+            return estimated_revenue_matrix
+
         if hasattr(self, "estimated_future_revenue"):
             estimated_revenue_matrix = self._estimated_matrix(
                 self.estimated_future_revenue,
