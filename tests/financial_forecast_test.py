@@ -8,9 +8,23 @@ class TestGrowthMethods(unittest.TestCase):
 
 class TestForecast(unittest.TestCase):
     def test_revenue_size(self):
-        ff=ForecastFinancial(current_revenue=10, n_periods=5)
-        rev = ff.get_revenue(best_case=50, middle_case=25, worst_case=10, uncertainty=0.02)
-        self.assertEqual(rev.shape, ff.arr_periods.shape)
+        current = {
+            'revenue': 10
+        }
+        scenario_1 = {
+            'revenue': 20,
+            'revenue_uncertainty': 2,
+            'probability': 0.8
+        }
+        scenario_2 = {
+            'revenue': 30,
+            'revenue_uncertainty': 3,
+            'probability': 0.2
+        }
+        estimates = [scenario_1, scenario_2]
+        ff=ForecastFinancial(current=current, estimates=estimates, n_samples=10000, n_periods=5)
+        rev = ff.get_revenue()
+        self.assertEqual(rev.shape, (ff.n_samples, ff.n_periods))
 
 
 if __name__ == "__main__":

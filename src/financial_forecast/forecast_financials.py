@@ -5,24 +5,26 @@ class ForecastFinancial:
 
     def __init__(
         self, 
-        current_revenue=None,
-        estimated_future_revenue=None,
-        estimated_future_revenue_uncertainty=None,
-        current_gross_margin=None,
-        estimated_gross_margin=None,
-        estimated_gross_margin_uncertainty=None,
-        current_sga_cost=None,
-        estimated_future_sga_cost=None,
-        estimated_future_sga_cost_uncertainty=None,
-        current_dep_amort=None,
-        estimated_future_dep_amort=None,
-        estimated_future_dep_amort_uncertainty=None,
-        current_interest_expense=None,
-        estimated_future_interest_expense=None,
-        estimated_future_interest_expense_uncertainty=None,
-        current_nwc=None,
-        estimated_future_nwc=None,
-        estimated_future_nwc_uncertainty=None,
+        current:dict=None,
+        estimates=None,
+        # current_revenue=None,
+        # estimated_future_revenue=None,
+        # estimated_future_revenue_uncertainty=None,
+        # current_gross_margin=None,
+        # estimated_gross_margin=None,
+        # estimated_gross_margin_uncertainty=None,
+        # current_sga_cost=None,
+        # estimated_future_sga_cost=None,
+        # estimated_future_sga_cost_uncertainty=None,
+        # current_dep_amort=None,
+        # estimated_future_dep_amort=None,
+        # estimated_future_dep_amort_uncertainty=None,
+        # current_interest_expense=None,
+        # estimated_future_interest_expense=None,
+        # estimated_future_interest_expense_uncertainty=None,
+        # current_nwc=None,
+        # estimated_future_nwc=None,
+        # estimated_future_nwc_uncertainty=None,
         n_periods=None,
         n_shares=None,
         wacc=None,
@@ -46,24 +48,29 @@ class ForecastFinancial:
             - uncertainty_pct (float, optional): This is used to calculate a standard deviation of the gross profit. Defaults to 0.2.
         """
 
-        self.current_revenue=current_revenue
-        self.estimated_future_revenue=estimated_future_revenue
-        self.estimated_future_revenue_uncertainty=estimated_future_revenue_uncertainty
-        self.current_gross_margin=current_gross_margin
-        self.estimated_gross_margin=estimated_gross_margin
-        self.estimated_gross_margin_uncertainty=estimated_gross_margin_uncertainty
-        self.current_sga_cost=current_sga_cost
-        self.estimated_future_sga_cost=estimated_future_sga_cost
-        self.estimated_future_sga_cost_uncertainty=estimated_future_sga_cost_uncertainty
-        self.current_dep_amort=current_dep_amort
-        self.estimated_future_dep_amort=estimated_future_dep_amort
-        self.estimated_future_dep_amort_uncertainty=estimated_future_dep_amort_uncertainty
-        self.current_interest_expense=current_interest_expense
-        self.estimated_future_interest_expense=estimated_future_interest_expense
-        self.estimated_future_interest_expense_uncertainty=estimated_future_interest_expense_uncertainty
-        self.current_nwc=current_nwc
-        self.estimated_future_nwc=estimated_future_nwc
-        self.estimated_future_nwc_uncertainty=estimated_future_nwc_uncertainty
+        self.current = current
+        if isinstance(estimates, dict):
+            self.estimates = [estimates]
+        elif isinstance(estimates, list):
+            self.estimates = estimates
+        # self.current_revenue=current_revenue
+        # self.estimated_future_revenue=estimated_future_revenue
+        # self.estimated_future_revenue_uncertainty=estimated_future_revenue_uncertainty
+        # self.current_gross_margin=current_gross_margin
+        # self.estimated_gross_margin=estimated_gross_margin
+        # self.estimated_gross_margin_uncertainty=estimated_gross_margin_uncertainty
+        # self.current_sga_cost=current_sga_cost
+        # self.estimated_future_sga_cost=estimated_future_sga_cost
+        # self.estimated_future_sga_cost_uncertainty=estimated_future_sga_cost_uncertainty
+        # self.current_dep_amort=current_dep_amort
+        # self.estimated_future_dep_amort=estimated_future_dep_amort
+        # self.estimated_future_dep_amort_uncertainty=estimated_future_dep_amort_uncertainty
+        # self.current_interest_expense=current_interest_expense
+        # self.estimated_future_interest_expense=estimated_future_interest_expense
+        # self.estimated_future_interest_expense_uncertainty=estimated_future_interest_expense_uncertainty
+        # self.current_nwc=current_nwc
+        # self.estimated_future_nwc=estimated_future_nwc
+        # self.estimated_future_nwc_uncertainty=estimated_future_nwc_uncertainty
         self.n_periods=n_periods
         self.n_shares=n_shares
         self.wacc=wacc
@@ -71,11 +78,7 @@ class ForecastFinancial:
         self.n_samples=n_samples
         self.tax_rate=tax_rate
 
-        self.arr_periods = np.ones((self.n_samples, self.n_periods)) * np.linspace(
-            1, self.n_periods, self.n_periods
-        )
-
-    def get_revenue(self, best_case=None, middle_case=None, worst_case=None, uncertainty=None) -> np.ndarray:
+    def get_revenue(self) -> np.ndarray:
         """Create a matrix with a shape of n_samples*n_periods with the estimated revenue in each period for each simulation.
         Each simulation has a CAGR and that CAGR is used for the growth rate of revenue.
 
@@ -85,52 +88,32 @@ class ForecastFinancial:
         Returns:
             np.ndarray: An array with shape n_samples*n_periods with the estimated revenue in each period for each simulation.
         """
-        if best_case:
-            best_revenue_matrix = self._estimated_matrix(
-                best_case,
-                best_case * uncertainty,
-                self.current_revenue,
-            )
-            try:
-                estimated_revenue_matrix = np.append([estimated_revenue_matrix, best_revenue_matrix], axis=0)
-            except:
-                estimated_revenue_matrix = best_revenue_matrix
-        if middle_case:
-            middle_revenue_matrix = self._estimated_matrix(
-                middle_case,
-                middle_case * uncertainty,
-                self.current_revenue,
-            )
-            try:
-                estimated_revenue_matrix = np.append([estimated_revenue_matrix, middle_revenue_matrix], axis=0)
-            except:
-                estimated_revenue_matrix = middle_revenue_matrix
-        if worst_case:
-            worst_revenue_matrix = self._estimated_matrix(
-                worst_case,
-                worst_case * uncertainty,
-                self.current_revenue,
-            )
-            try:
-                estimated_revenue_matrix = np.append([estimated_revenue_matrix, worst_revenue_matrix], axis=0)
-            except:
-                estimated_revenue_matrix = worst_revenue_matrix
-        if best_case or middle_case or worst_case:
-            mask = np.random.randint(len(estimated_revenue_matrix), size=len(estimated_revenue_matrix))<self.n_samples
-            estimated_revenue_matrix = estimated_revenue_matrix[mask]
-            return estimated_revenue_matrix
 
-        if hasattr(self, "estimated_future_revenue"):
-            estimated_revenue_matrix = self._estimated_matrix(
-                self.estimated_future_revenue,
-                self.estimated_future_revenue_uncertainty,
-                self.current_revenue,
-            )
-            return estimated_revenue_matrix
-        else:
-            raise Exception(
-                "Please set revenue targets first using the set_revenue() function."
-            )
+        if not 'revenue' in self.current.keys():
+            print('The current dictionary must have a field called revenue, which should contain the latest known revenue.')
+
+        samples_total = 0
+
+        for estimate_dict in self.estimates:
+            # For each of the scenarios the estimated revenue matrix must be set and added to the output matrix.
+            if not 'revenue' in estimate_dict.keys() or not 'revenue_uncertainty' in estimate_dict.keys() or not 'probability' in estimate_dict.keys():
+                print('The estimate dictionary must have fields called revenue and revenue_uncertainty.')
+            
+            # Making sure that the sample size is correct.
+            if estimate_dict == self.estimates[-1]:
+                samples = int(self.n_samples - samples_total)
+            else:
+                samples = int(self.n_samples * estimate_dict['probability'])
+                samples_total += samples
+
+            # Estimates the revenue matrix and adds it to the output matrix.
+            scenario_estimate_revenue_matrix = self._estimated_matrix(estimate_dict['revenue'], estimate_dict['revenue_uncertainty'], self.current['revenue'], samples)
+            try:
+                estimate_revenue_matrix = np.append(estimate_revenue_matrix, scenario_estimate_revenue_matrix, axis=0)
+            except NameError:
+                estimate_revenue_matrix = scenario_estimate_revenue_matrix
+
+        return estimate_revenue_matrix
 
     def get_gross_margin(self) -> np.ndarray:
         if hasattr(self, "estimated_gross_margin"):
@@ -262,11 +245,15 @@ class ForecastFinancial:
 
         return self.company_value / self.n_shares
 
-    def _estimated_matrix(self, estimate, uncertainty, current):
-        arr_estimate = np.random.normal(estimate, uncertainty, self.n_samples)
+    def _estimated_matrix(self, estimate, uncertainty, current, samples):
+        arr_periods = np.ones((samples, self.n_periods)) * np.linspace(
+            1, self.n_periods, self.n_periods
+        )
+
+        arr_estimate = np.random.normal(estimate, uncertainty, samples)
         arr_cagr = cagr(current, arr_estimate, self.n_periods)
         arr_cagr_multiplier = np.power(
-            1 + arr_cagr.reshape(self.n_samples, 1), self.arr_periods
+            1 + arr_cagr.reshape(samples, 1), arr_periods
         )
         estimated_matrix = current * arr_cagr_multiplier
         return estimated_matrix
