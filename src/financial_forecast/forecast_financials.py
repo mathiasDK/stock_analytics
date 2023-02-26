@@ -1,11 +1,12 @@
 import numpy as np
 
+
 class ForecastFinancial:
     # Source of inspiration: https://www.linkedin.com/pulse/how-assess-value-company-combining-discounted-cash-anthony/
 
     def __init__(
-        self, 
-        current:dict=None,
+        self,
+        current: dict = None,
         estimates=None,
         # current_revenue=None,
         # estimated_future_revenue=None,
@@ -31,7 +32,8 @@ class ForecastFinancial:
         perpetual_rate=None,
         n_samples=10000,
         tax_rate=None,
-        **kwargs) -> None:
+        **kwargs
+    ) -> None:
         """This function will forecast the financials of a company with a given set of input and then do a set of simulations with some different scenarios to get
         the most accurate picture of where a company x periods into the future.
 
@@ -71,12 +73,12 @@ class ForecastFinancial:
         # self.current_nwc=current_nwc
         # self.estimated_future_nwc=estimated_future_nwc
         # self.estimated_future_nwc_uncertainty=estimated_future_nwc_uncertainty
-        self.n_periods=n_periods
-        self.n_shares=n_shares
-        self.wacc=wacc
-        self.perpetual_rate=perpetual_rate
-        self.n_samples=n_samples
-        self.tax_rate=tax_rate
+        self.n_periods = n_periods
+        self.n_shares = n_shares
+        self.wacc = wacc
+        self.perpetual_rate = perpetual_rate
+        self.n_samples = n_samples
+        self.tax_rate = tax_rate
 
     def get_revenue(self) -> np.ndarray:
         """Create a matrix with a shape of n_samples*n_periods with the estimated revenue in each period for each simulation.
@@ -89,44 +91,102 @@ class ForecastFinancial:
             np.ndarray: An array with shape n_samples*n_periods with the estimated revenue in each period for each simulation.
         """
 
-        if not 'revenue' in self.current.keys():
-            print('The current dictionary must have a field called revenue, which should contain the latest known revenue.')
+        if not "revenue" in self.current.keys():
+            print(
+                "The current dictionary must have a field called revenue, which should contain the latest known revenue."
+            )
 
         samples_total = 0
 
         for estimate_dict in self.estimates:
             # For each of the scenarios the estimated revenue matrix must be set and added to the output matrix.
-            if not 'revenue' in estimate_dict.keys() or not 'revenue_uncertainty' in estimate_dict.keys() or not 'probability' in estimate_dict.keys():
-                print('The estimate dictionary must have fields called revenue and revenue_uncertainty.')
-            
+            if (
+                not "revenue" in estimate_dict.keys()
+                or not "revenue_uncertainty" in estimate_dict.keys()
+                or not "probability" in estimate_dict.keys()
+            ):
+                print(
+                    "The estimate dictionary must have fields called revenue and revenue_uncertainty."
+                )
+
             # Making sure that the sample size is correct.
             if estimate_dict == self.estimates[-1]:
                 samples = int(self.n_samples - samples_total)
             else:
-                samples = int(self.n_samples * estimate_dict['probability'])
+                samples = int(self.n_samples * estimate_dict["probability"])
                 samples_total += samples
 
             # Estimates the revenue matrix and adds it to the output matrix.
-            scenario_estimate_revenue_matrix = self._estimated_matrix(estimate_dict['revenue'], estimate_dict['revenue_uncertainty'], self.current['revenue'], samples)
+            scenario_estimate_revenue_matrix = self._estimated_matrix(
+                estimate_dict["revenue"],
+                estimate_dict["revenue_uncertainty"],
+                self.current["revenue"],
+                samples,
+            )
             try:
-                estimate_revenue_matrix = np.append(estimate_revenue_matrix, scenario_estimate_revenue_matrix, axis=0)
+                estimate_revenue_matrix = np.append(
+                    estimate_revenue_matrix, scenario_estimate_revenue_matrix, axis=0
+                )
             except NameError:
                 estimate_revenue_matrix = scenario_estimate_revenue_matrix
 
         return estimate_revenue_matrix
 
     def get_gross_margin(self) -> np.ndarray:
-        if hasattr(self, "estimated_gross_margin"):
-            estimated_gross_margin_matrix = self._estimated_matrix(
-                self.estimated_gross_margin,
-                self.estimated_gross_margin_uncertainty,
-                self.current_gross_margin,
+        if not "gross_margin" in self.current.keys():
+            print(
+                "The current dictionary must have a field called gross_margin, which should contain the latest known gross_margin."
             )
-            return estimated_gross_margin_matrix
-        else:
-            raise Exception(
-                "Please set gross margin targets first using the set_gross_margin() function."
+
+        samples_total = 0
+
+        for estimate_dict in self.estimates:
+            # For each of the scenarios the estimated gross margin matrix must be set and added to the output matrix.
+            if (
+                not "gross_margin" in estimate_dict.keys()
+                or not "gross_margin_uncertainty" in estimate_dict.keys()
+                or not "probability" in estimate_dict.keys()
+            ):
+                print(
+                    "The estimate dictionary must have fields called gross_margin and gross_margin_uncertainty."
+                )
+
+            # Making sure that the sample size is correct.
+            if estimate_dict == self.estimates[-1]:
+                samples = int(self.n_samples - samples_total)
+            else:
+                samples = int(self.n_samples * estimate_dict["probability"])
+                samples_total += samples
+
+            # Estimates the gross margin matrix and adds it to the output matrix.
+            scenario_estimate_gross_margin_matrix = self._estimated_matrix(
+                estimate_dict["gross_margin"],
+                estimate_dict["gross_margin_uncertainty"],
+                self.current["gross_margin"],
+                samples,
             )
+            try:
+                estimate_gross_margin_matrix = np.append(
+                    estimate_gross_margin_matrix,
+                    scenario_estimate_gross_margin_matrix,
+                    axis=0,
+                )
+            except NameError:
+                estimate_gross_margin_matrix = scenario_estimate_gross_margin_matrix
+
+        return estimate_gross_margin_matrix
+
+        # if hasattr(self, "estimated_gross_margin"):
+        #     estimated_gross_margin_matrix = self._estimated_matrix(
+        #         self.estimated_gross_margin,
+        #         self.estimated_gross_margin_uncertainty,
+        #         self.current_gross_margin,
+        #     )
+        #     return estimated_gross_margin_matrix
+        # else:
+        #     raise Exception(
+        #         "Please set gross margin targets first using the set_gross_margin() function."
+        #     )
 
     def get_gross_profit(self) -> np.ndarray:
         revenue = self.get_revenue()
@@ -252,9 +312,7 @@ class ForecastFinancial:
 
         arr_estimate = np.random.normal(estimate, uncertainty, samples)
         arr_cagr = cagr(current, arr_estimate, self.n_periods)
-        arr_cagr_multiplier = np.power(
-            1 + arr_cagr.reshape(samples, 1), arr_periods
-        )
+        arr_cagr_multiplier = np.power(1 + arr_cagr.reshape(samples, 1), arr_periods)
         estimated_matrix = current * arr_cagr_multiplier
         return estimated_matrix
 
