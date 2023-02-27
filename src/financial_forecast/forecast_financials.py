@@ -176,18 +176,6 @@ class ForecastFinancial:
 
         return estimate_gross_margin_matrix
 
-        # if hasattr(self, "estimated_gross_margin"):
-        #     estimated_gross_margin_matrix = self._estimated_matrix(
-        #         self.estimated_gross_margin,
-        #         self.estimated_gross_margin_uncertainty,
-        #         self.current_gross_margin,
-        #     )
-        #     return estimated_gross_margin_matrix
-        # else:
-        #     raise Exception(
-        #         "Please set gross margin targets first using the set_gross_margin() function."
-        #     )
-
     def get_gross_profit(self) -> np.ndarray:
         revenue = self.get_revenue()
         gross_margin = self.get_gross_margin()
@@ -195,87 +183,83 @@ class ForecastFinancial:
         return gross_profit
 
     def get_sga(self) -> np.ndarray:
-        if hasattr(self, "estimated_future_sga_cost"):
-            estimated_sga_matrix = self._estimated_matrix(
-                self.estimated_future_sga_cost,
-                self.estimated_future_sga_cost_uncertainty,
-                self.current_sga_cost,
-            )
-            return estimated_sga_matrix
-        else:
-            raise Exception(
-                "Please set sga cost targets first using the set_sga_cost() function."
-            )
+        pass
 
     def get_dep_amort(self) -> np.ndarray:
-        if hasattr(self, "estimated_future_dep_amort"):
-            estimated_dep_amort_matrix = self._estimated_matrix(
-                self.estimated_future_dep_amort,
-                self.estimated_future_dep_amort_uncertainty,
-                self.current_dep_amort,
-            )
-            return estimated_dep_amort_matrix
-        else:
-            raise Exception(
-                "Please set depreciation and amortization targets first using the set_dep_amort() function."
-            )
+        pass
 
     def get_interest_expense(self) -> np.ndarray:
-        if hasattr(self, "estimated_future_interest_expense"):
-            estimated_int_exp_matrix = self._estimated_matrix(
-                self.estimated_future_interest_expense,
-                self.estimated_future_interest_expense_uncertainty,
-                self.current_interest_expense,
-            )
-            return estimated_int_exp_matrix
-        else:
-            raise Exception(
-                "Please set interest expense targets first using the set_int_exp() function."
-            )
+        pass
 
     def get_nwc(self) -> np.ndarray:
-        if hasattr(self, "estimated_future_nwc"):
-            estimated_nwc_matrix = self._estimated_matrix(
-                self.estimated_future_nwc,
-                self.estimated_future_nwc_uncertainty,
-                self.current_nwc,
-            )
-            return estimated_nwc_matrix
-        else:
-            raise Exception(
-                "Please set nwc targets first using the set_nwc() function."
-            )
+        pass
 
     def get_ebit_margin(self) -> np.ndarray:
-        revenue = self.get_revenue()
-        gross_profit = self.get_gross_profit()
-        sga = -1 * self.get_sga()
-        dep_amort = self.get_dep_amort()
-        ebit = gross_profit + sga + dep_amort
+        if not "ebit_margin" in self.current.keys():
+            print(
+                "The current dictionary must have a field called ebit_margin, which should contain the latest known ebit_margin."
+            )
 
-        ebit_margin = ebit / revenue
-        return ebit_margin
+        samples_total = 0
+
+        for estimate_dict in self.estimates:
+            # For each of the scenarios the estimated gross margin matrix must be set and added to the output matrix.
+            if (
+                not "ebit_margin" in estimate_dict.keys()
+                or not "ebit_margin_uncertainty" in estimate_dict.keys()
+                or not "probability" in estimate_dict.keys()
+            ):
+                print(
+                    "The estimate dictionary must have fields called ebit_margin and ebit_margin_uncertainty."
+                )
+
+            # Making sure that the sample size is correct.
+            if estimate_dict == self.estimates[-1]:
+                samples = int(self.n_samples - samples_total)
+            else:
+                samples = int(self.n_samples * estimate_dict["probability"])
+                samples_total += samples
+
+            # Estimates the gross margin matrix and adds it to the output matrix.
+            scenario_estimate_ebit_margin_matrix = self._estimated_matrix(
+                estimate_dict["ebit_margin"],
+                estimate_dict["ebit_margin_uncertainty"],
+                self.current["ebit_margin"],
+                samples,
+            )
+            try:
+                estimate_gross_margin_matrix = np.append(
+                    estimate_gross_margin_matrix,
+                    scenario_estimate_ebit_margin_matrix,
+                    axis=0,
+                )
+            except NameError:
+                estimate_ebit_margin_matrix = scenario_estimate_ebit_margin_matrix
+
+        return estimate_ebit_margin_matrix
 
     def get_net_income(self) -> np.ndarray:
-        gross_profit = self.get_gross_profit()
-        sga = -1 * self.get_sga()
-        dep_amort = self.get_dep_amort()
-        int_exp = self.get_interest_expense()
-        profit_before_tax = gross_profit + sga + dep_amort + int_exp
+        # gross_profit = self.get_gross_profit()
+        # sga = -1 * self.get_sga()
+        # dep_amort = self.get_dep_amort()
+        # int_exp = self.get_interest_expense()
+        revenue = self.get_revenue()
+        ebit_margin = self.get_ebit_margin()
+        profit_before_tax = revenue * ebit_margin  # gross_profit + sga + dep_amort + int_exp
         tax = profit_before_tax * self.tax_rate * -1.0
         net_income = profit_before_tax + tax
         return net_income
 
     def get_fcf(self) -> np.ndarray:
-        gross_profit = self.get_gross_profit()
-        sga = -1 * self.get_sga()
-        dep_amort = self.get_dep_amort()
-        capex = dep_amort
-        int_exp = self.get_interest_expense()
-        profit_before_tax = gross_profit + sga + dep_amort + int_exp
-        tax = profit_before_tax * self.tax_rate * -1.0
-        net_income = profit_before_tax + tax
+
+        # Calculating net income
+        net_income = self.get_net_income()
+
+        # Calculating free cash flow
         nwc = self.get_nwc()
+        int_exp = self.get_interest_expense()
+        dep_amort = self.get_dep_amort()
+        capex = dep_amort  # WHY?
         fcf = net_income - int_exp - dep_amort + nwc + capex
         return fcf
 
@@ -303,7 +287,21 @@ class ForecastFinancial:
         if not hasattr(self, "company_value"):
             self.get_company_value()
 
-        return self.company_value / self.n_shares
+        samples_total = 0
+        shares_full = []
+
+        for estimate_dict in self.estimates:
+
+            if estimate_dict == self.estimates[-1]:
+                samples = int(self.n_samples - samples_total)
+            else:
+                samples = int(self.n_samples * estimate_dict["probability"])
+                samples_total += samples
+
+            shares = [estimate_dict['shares']]*samples
+            shares_full.append(*shares)
+
+        return self.company_value / np.array(shares_full)
 
     def _estimated_matrix(self, estimate, uncertainty, current, samples):
         arr_periods = np.ones((samples, self.n_periods)) * np.linspace(
