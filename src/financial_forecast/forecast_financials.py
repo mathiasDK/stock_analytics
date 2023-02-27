@@ -74,7 +74,6 @@ class ForecastFinancial:
         # self.estimated_future_nwc=estimated_future_nwc
         # self.estimated_future_nwc_uncertainty=estimated_future_nwc_uncertainty
         self.n_periods = n_periods
-        self.n_shares = n_shares
         self.wacc = wacc
         self.perpetual_rate = perpetual_rate
         self.n_samples = n_samples
@@ -267,7 +266,7 @@ class ForecastFinancial:
         discount_factor = np.power(1 + self.wacc, self.arr_periods)
         return discount_factor
 
-    def get_company_value(self) -> np.ndarray:
+    def get_discounted_company_value(self) -> np.ndarray:
         fcf = self.get_fcf()
         discount_factor = self.get_discount_factor()
         npv = fcf / discount_factor
@@ -280,18 +279,20 @@ class ForecastFinancial:
         )
 
         company_value = np.sum(npv, axis=1) + terminal_value
-        self.company_value = company_value
+        self.discounted_company_value = company_value
         return company_value
 
     def get_fair_value_per_share(self) -> np.array:
-        if not hasattr(self, "company_value"):
-            self.get_company_value()
+        if not hasattr(self, "discounted_company_value"):
+            # Making sure that there is a discounted company value calculated
+            self.get_discounted_company_value()
 
         samples_total = 0
         shares_full = []
 
+        # Adding the number of shares for each scenario so it can divide the discounted 
+        # company value and thereby calculate the current value of the shares.
         for estimate_dict in self.estimates:
-
             if estimate_dict == self.estimates[-1]:
                 samples = int(self.n_samples - samples_total)
             else:
@@ -299,9 +300,10 @@ class ForecastFinancial:
                 samples_total += samples
 
             shares = [estimate_dict['shares']]*samples
-            shares_full.append(*shares)
+            shares_full.append(shares)
+            shares_full = [item for sublist in shares_full for item in sublist]  # Flattening
 
-        return self.company_value / np.array(shares_full)
+        return self.discounted_company_value / np.array(shares_full)
 
     def _estimated_matrix(self, estimate, uncertainty, current, samples):
         arr_periods = np.ones((samples, self.n_periods)) * np.linspace(
