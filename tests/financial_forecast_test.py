@@ -1,5 +1,5 @@
 import unittest
-from src.financial_forecast.forecast_financials import cagr, ForecastFinancial
+from src.financial_forecast.simulation import cagr, FinancialForecast
 
 
 class TestGrowthMethods(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestForecast(unittest.TestCase):
         scenario_1 = {"revenue": 20, "revenue_uncertainty": 2, "probability": 0.8}
         scenario_2 = {"revenue": 30, "revenue_uncertainty": 3, "probability": 0.2}
         estimates = [scenario_1, scenario_2]
-        ff = ForecastFinancial(
+        ff = FinancialForecast(
             current=current, estimates=estimates, n_samples=10000, n_periods=5
         )
         rev = ff.get_revenue()
@@ -32,11 +32,11 @@ class TestForecast(unittest.TestCase):
             "probability": 0.2,
         }
         estimates = [scenario_1, scenario_2]
-        ff = ForecastFinancial(
+        ff = FinancialForecast(
             current=current, estimates=estimates, n_samples=10000, n_periods=5
         )
         gm = ff.get_gross_margin()
-        self.assertEqual(gm.shape, (ff.n_samples, ff.n_periods))
+        self.assertAlmostEqual(gm.shape, (ff.n_samples, ff.n_periods))
 
 
 if __name__ == "__main__":
