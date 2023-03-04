@@ -1,1 +1,1 @@
-from .forecast_financials import forecast_financials
+from .simulation import FinancialForecast

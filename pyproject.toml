@@ -1,6 +1,9 @@
-[build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3", "numpy"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+
+[tool.black]
 
 [project]
 name = "stock_analytics_mathiasdk"
@@ -8,6 +11,7 @@ version = "0.0.1"
 authors = [
   { name="Mathias Nørskov"},
 ]
+maintainers = ["Mathias Nørskov"]
 description = "A package for doing stock analytics."
 readme = "README.md"
 requires-python = ">=3.7"
