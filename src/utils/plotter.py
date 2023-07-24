@@ -1,7 +1,7 @@
 import plotly.express as px
 import plotly.colors as pc
 import plotly.graph_objects as go
-from .styling import PrimaryColors, SecondaryColors, ColorList
+from styling import PrimaryColors, SecondaryColors, ColorList
 import pandas as pd
 
 class Plotter:
@@ -31,9 +31,10 @@ class Plotter:
         elif len(self.peers)==5:
             return ColorList.FIVE.value
         else:
-            start_color = pc.hex_to_rgb(SecondaryColors.PURPLE.value)
-            end_color = pc.hex_to_rgb(SecondaryColors.LAVENDER.value)
-            return pc.n_colors(start_color, end_color, len(self.peers))
+            start_color = pc.label_rgb(pc.hex_to_rgb(SecondaryColors.PURPLE.value))
+            end_color = pc.label_rgb(pc.hex_to_rgb(SecondaryColors.LAVENDER.value))
+            color_list = pc.n_colors(start_color, end_color, len(self.peers), colortype="rgb")
+            return color_list
 
     def bar(self, y_col:str, mask:list, **kwargs):
         df = self.data.copy()
@@ -79,15 +80,38 @@ class Plotter:
 if __name__=="__main__":
     df = pd.DataFrame(
         data={
-            "date": [1,2,1,2,1,2],
-            "value": [2,3,4,5,3,5],
-            "ticker": ["ORSTED.CO", "ORSTED.CO", "VWS.CO", "VWS.CO", "DANSKE.CO", "DANSKE.CO"]
+            "date": [
+                1,2,
+                1,2,
+                1,2,
+                1,2,
+                1,2,
+                1,2,
+                1,2,
+            ],
+            "value": [
+                2,0,
+                4,2,
+                3,5,
+                2,5,
+                2,3,
+                4,5,
+                2,1,
+            ],
+            "ticker": [
+                "ORSTED.CO", "ORSTED.CO", 
+                "VWS.CO", "VWS.CO", 
+                "DANSKE.CO", "DANSKE.CO", 
+                "AAPL", "AAPL", 
+                "A", "A", 
+                "B", "B",
+                "C", "C"]
         }
     )
     primary_ticker = "ORSTED.CO"
-    peers = ["VWS.CO", "DANSKE.CO"]
+    peers = ["VWS.CO", "DANSKE.CO", "AAPL", "A","B","C"]
 
     # Plotter(df.loc[0,2], primary_ticker=primary_ticker, peers=peers).bar()
     p = Plotter(df, primary_ticker=primary_ticker, peers=peers)
     p.line(y_col="value").show()
-    p.bar(y_col="value", mask=[True, False, True, False, True, False]).show()
+    p.bar(y_col="value", mask=[True, False, True, False, True, False, True, False]).show()
