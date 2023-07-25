@@ -1,17 +1,26 @@
 import plotly.express as px
 import plotly.colors as pc
 import plotly.graph_objects as go
-from styling import PrimaryColors, SecondaryColors, ColorList
+from .styling import PrimaryColors, SecondaryColors, ColorList
 import pandas as pd
 
 class Plotter:
     def __init__(self, data:pd.DataFrame, primary_ticker:str, peers:list) -> None:
+        """Creating a plotting function primarily to ensure that the coloring is consistent across graphs.
+
+        Args:
+            data (pd.DataFrame): A dataframe containing all data that can be plotted.
+            primary_ticker (str): The primary ticker used to make sure that this ticker is highlighted
+            peers (list): A list of peers.
+        """
         self.data = data
         self.primary_ticker = primary_ticker
         self.peers = peers
         self._create_color_dict()
 
     def _create_color_dict(self) -> None:
+        """Creating a dictionary containing each ticker and a corresponding color to ensure that the coloring is consistent across graphs.
+        """
         self.color_dict = {
             str(self.primary_ticker): PrimaryColors.ORANGE.value
         }
@@ -20,6 +29,13 @@ class Plotter:
             self.color_dict[peer] = color
 
     def _get_color_list(self) -> list:
+        """Creating a list of colors for each peer (not the primary ticker).
+        Depending on the number of peers a list will be provided from the styling.py file.
+        If there are more than 5 peers then a list of colors are created ranging from the start color to the end color.
+
+        Returns:
+            list: The list of colors for each peer.
+        """
         if len(self.peers)==1:
             return ColorList.ONE.value
         elif len(self.peers)==2:
@@ -36,7 +52,44 @@ class Plotter:
             color_list = pc.n_colors(start_color, end_color, len(self.peers), colortype="rgb")
             return color_list
 
+    def _convert_numbers(self, number_list:list)->list:
+        """Converting a list of numbers into a list of strings that are ready to be plotted. 
+        Converting large numbers to smaller numbers and adding the abbreviation for it.
+
+        Args:
+            number_list (list): A list of numbers
+
+        Returns:
+            list: A list of strings with rounded numbers in the smallest possible format.
+        """
+        try:
+            max_value = max(number_list)
+            if max_value / 1e12 > 1:
+                number_list = [str(round(val*1./1e12, 1))+"T" for val in number_list]
+            elif max_value / 1e9 > 1:
+                number_list = [str(round(val*1./1e9, 1))+"B" for val in number_list]
+            elif max_value / 1e6 > 1:
+                number_list = [str(round(val*1./1e6, 1))+"M" for val in number_list]
+            elif max_value / 1e3 > 1:
+                number_list = [str(round(val*1./1e3, 1))+"K" for val in number_list]
+            else:
+                number_list = [str(round(val*1./1, 1)) for val in number_list]
+            return number_list
+        except:
+            number_list = [str(round(val*1./1, 1)) for val in number_list]
+            return number_list
+
     def bar(self, y_col:str, mask:list, **kwargs):
+        """Creating a bar plot using the plotly.express.bar function. 
+        The kwargs go into the bar function.
+
+        Args:
+            y_col (str): The y column that should be plotted from the dataframe inputted in the object.
+            mask (list): Since the full dataframe contains observations for multiple dates, then a boolean list is inputted to filter the dataframe.
+
+        Returns:
+            go.Figure: The bar plot.
+        """
         df = self.data.copy()
         df = df[mask].sort_values(by=[y_col], ascending=[False])
 
@@ -50,7 +103,7 @@ class Plotter:
                 x = x,
                 y = y,
                 marker_color = colors,
-                text = [f"{str(round(val,1))}" for val in y],
+                text = self._convert_numbers(y.tolist()),
                 **kwargs
             )]
         )
@@ -62,6 +115,15 @@ class Plotter:
         return fig
 
     def line(self, y_col:str, **kwargs):
+        """Creating a line plot using the plotly.express.line function. 
+        The kwargs go into the line function.
+
+        Args:
+            y_col (str): The y column that should be plotted from the dataframe inputted in the object.
+
+        Returns:
+            go.Figure: The line plot.
+        """
         fig = px.line(
             self.data,
             x = "date",
