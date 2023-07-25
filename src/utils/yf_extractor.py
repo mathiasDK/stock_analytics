@@ -3,8 +3,9 @@ import urllib.request as ur
 import json
 import pandas as pd
 
+
 class YahooExtractor:
-    def __init__(self, ticker:str):
+    def __init__(self, ticker: str):
         self.ticker = ticker
 
     def get_stats(self) -> pd.DataFrame:
@@ -18,9 +19,7 @@ class YahooExtractor:
         stat_dict = self._get_readable_json(url)
 
         # Starting to input data into the dataframe.
-        df = pd.DataFrame(
-            columns=["metric", "date", "value"]
-        )
+        df = pd.DataFrame(columns=["metric", "date", "value"])
 
         for i in range(len(stat_dict["timeseries"]["result"])):
             # Looping through each metric and putting it into dataframe if possible.
@@ -40,12 +39,12 @@ class YahooExtractor:
                     stat_dates.append(stat_date)
                     stat_values.append(stat_value)
 
-                stat_metrics = [metric]*len(stat_values)
+                stat_metrics = [metric] * len(stat_values)
                 sub_df = pd.DataFrame(
                     data={
                         "metric": stat_metrics,
                         "date": stat_dates,
-                        "value": stat_values
+                        "value": stat_values,
                     }
                 )
 
@@ -75,7 +74,7 @@ class YahooExtractor:
 
         try:
             symbol_json = self._get_readable_json(url)
-            s = symbol_json['finance']['result'][0]['recommendedSymbols']
+            s = symbol_json["finance"]["result"][0]["recommendedSymbols"]
             symbols = [val["symbol"] for val in s]
 
             return symbols
@@ -92,14 +91,17 @@ class YahooExtractor:
         Returns:
             dict: The url in a more readable format.
         """
-        read_data = ur.urlopen(url).read() 
-        soup_stat = BeautifulSoup(read_data,'lxml')
-        output_string = str(soup_stat.find_all('p')[0])[3:-4] # Trimming the html string to a json convertible string
+        read_data = ur.urlopen(url).read()
+        soup_stat = BeautifulSoup(read_data, "lxml")
+        output_string = str(soup_stat.find_all("p")[0])[
+            3:-4
+        ]  # Trimming the html string to a json convertible string
         output_json = json.loads(output_string)
 
         return output_json
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     orsted = YahooExtractor("ORSTED.CO")
     print(orsted.get_stats())
     print(orsted.get_potential_metrics())

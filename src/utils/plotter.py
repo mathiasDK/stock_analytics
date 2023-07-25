@@ -4,8 +4,9 @@ import plotly.graph_objects as go
 from .styling import PrimaryColors, SecondaryColors, ColorList
 import pandas as pd
 
+
 class Plotter:
-    def __init__(self, data:pd.DataFrame, primary_ticker:str, peers:list) -> None:
+    def __init__(self, data: pd.DataFrame, primary_ticker: str, peers: list) -> None:
         """Creating a plotting function primarily to ensure that the coloring is consistent across graphs.
 
         Args:
@@ -19,11 +20,8 @@ class Plotter:
         self._create_color_dict()
 
     def _create_color_dict(self) -> None:
-        """Creating a dictionary containing each ticker and a corresponding color to ensure that the coloring is consistent across graphs.
-        """
-        self.color_dict = {
-            str(self.primary_ticker): PrimaryColors.ORANGE.value
-        }
+        """Creating a dictionary containing each ticker and a corresponding color to ensure that the coloring is consistent across graphs."""
+        self.color_dict = {str(self.primary_ticker): PrimaryColors.ORANGE.value}
         color_list = self._get_color_list()
         for peer, color in zip(self.peers, color_list):
             self.color_dict[peer] = color
@@ -36,24 +34,26 @@ class Plotter:
         Returns:
             list: The list of colors for each peer.
         """
-        if len(self.peers)==1:
+        if len(self.peers) == 1:
             return ColorList.ONE.value
-        elif len(self.peers)==2:
+        elif len(self.peers) == 2:
             return ColorList.TWO.value
-        elif len(self.peers)==3:
+        elif len(self.peers) == 3:
             return ColorList.THREE.value
-        elif len(self.peers)==4:
+        elif len(self.peers) == 4:
             return ColorList.FOUR.value
-        elif len(self.peers)==5:
+        elif len(self.peers) == 5:
             return ColorList.FIVE.value
         else:
             start_color = pc.label_rgb(pc.hex_to_rgb(SecondaryColors.PURPLE.value))
             end_color = pc.label_rgb(pc.hex_to_rgb(SecondaryColors.LAVENDER.value))
-            color_list = pc.n_colors(start_color, end_color, len(self.peers), colortype="rgb")
+            color_list = pc.n_colors(
+                start_color, end_color, len(self.peers), colortype="rgb"
+            )
             return color_list
 
-    def _convert_numbers(self, number_list:list)->list:
-        """Converting a list of numbers into a list of strings that are ready to be plotted. 
+    def _convert_numbers(self, number_list: list) -> list:
+        """Converting a list of numbers into a list of strings that are ready to be plotted.
         Converting large numbers to smaller numbers and adding the abbreviation for it.
 
         Args:
@@ -65,22 +65,30 @@ class Plotter:
         try:
             max_value = max(number_list)
             if max_value / 1e12 > 1:
-                number_list = [str(round(val*1./1e12, 1))+"T" for val in number_list]
+                number_list = [
+                    str(round(val * 1.0 / 1e12, 1)) + "T" for val in number_list
+                ]
             elif max_value / 1e9 > 1:
-                number_list = [str(round(val*1./1e9, 1))+"B" for val in number_list]
+                number_list = [
+                    str(round(val * 1.0 / 1e9, 1)) + "B" for val in number_list
+                ]
             elif max_value / 1e6 > 1:
-                number_list = [str(round(val*1./1e6, 1))+"M" for val in number_list]
+                number_list = [
+                    str(round(val * 1.0 / 1e6, 1)) + "M" for val in number_list
+                ]
             elif max_value / 1e3 > 1:
-                number_list = [str(round(val*1./1e3, 1))+"K" for val in number_list]
+                number_list = [
+                    str(round(val * 1.0 / 1e3, 1)) + "K" for val in number_list
+                ]
             else:
-                number_list = [str(round(val*1./1, 1)) for val in number_list]
+                number_list = [str(round(val * 1.0 / 1, 1)) for val in number_list]
             return number_list
         except:
-            number_list = [str(round(val*1./1, 1)) for val in number_list]
+            number_list = [str(round(val * 1.0 / 1, 1)) for val in number_list]
             return number_list
 
-    def bar(self, y_col:str, mask:list, **kwargs):
-        """Creating a bar plot using the plotly.express.bar function. 
+    def bar(self, y_col: str, mask: list, **kwargs):
+        """Creating a bar plot using the plotly.express.bar function.
         The kwargs go into the bar function.
 
         Args:
@@ -99,23 +107,25 @@ class Plotter:
         x = df["ticker"]
         y = df[y_col]
         fig = go.Figure(
-            data=[go.Bar(
-                x = x,
-                y = y,
-                marker_color = colors,
-                text = self._convert_numbers(y.tolist()),
-                **kwargs
-            )]
+            data=[
+                go.Bar(
+                    x=x,
+                    y=y,
+                    marker_color=colors,
+                    text=self._convert_numbers(y.tolist()),
+                    **kwargs,
+                )
+            ]
         )
         fig.update_layout(
             yaxis=dict(rangemode="tozero", title=None),
             xaxis=dict(title=None),
-            title=f"{y_col} by Ticker"
+            title=f"{y_col} by Ticker",
         )
         return fig
 
-    def line(self, y_col:str, **kwargs):
-        """Creating a line plot using the plotly.express.line function. 
+    def line(self, y_col: str, **kwargs):
+        """Creating a line plot using the plotly.express.line function.
         The kwargs go into the line function.
 
         Args:
@@ -126,54 +136,79 @@ class Plotter:
         """
         fig = px.line(
             self.data,
-            x = "date",
-            y = y_col,
-            color = "ticker",
-            color_discrete_map = self.color_dict,
-            **kwargs
+            x="date",
+            y=y_col,
+            color="ticker",
+            color_discrete_map=self.color_dict,
+            **kwargs,
         )
         fig.update_layout(
             yaxis=dict(rangemode="tozero", title=None),
             xaxis=dict(title=None),
-            title=f"Development in {y_col} by Ticker"
+            title=f"Development in {y_col} by Ticker",
         )
         return fig
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     df = pd.DataFrame(
         data={
             "date": [
-                1,2,
-                1,2,
-                1,2,
-                1,2,
-                1,2,
-                1,2,
-                1,2,
+                1,
+                2,
+                1,
+                2,
+                1,
+                2,
+                1,
+                2,
+                1,
+                2,
+                1,
+                2,
+                1,
+                2,
             ],
             "value": [
-                2,0,
-                4,2,
-                3,5,
-                2,5,
-                2,3,
-                4,5,
-                2,1,
+                2,
+                0,
+                4,
+                2,
+                3,
+                5,
+                2,
+                5,
+                2,
+                3,
+                4,
+                5,
+                2,
+                1,
             ],
             "ticker": [
-                "ORSTED.CO", "ORSTED.CO", 
-                "VWS.CO", "VWS.CO", 
-                "DANSKE.CO", "DANSKE.CO", 
-                "AAPL", "AAPL", 
-                "A", "A", 
-                "B", "B",
-                "C", "C"]
+                "ORSTED.CO",
+                "ORSTED.CO",
+                "VWS.CO",
+                "VWS.CO",
+                "DANSKE.CO",
+                "DANSKE.CO",
+                "AAPL",
+                "AAPL",
+                "A",
+                "A",
+                "B",
+                "B",
+                "C",
+                "C",
+            ],
         }
     )
     primary_ticker = "ORSTED.CO"
-    peers = ["VWS.CO", "DANSKE.CO", "AAPL", "A","B","C"]
+    peers = ["VWS.CO", "DANSKE.CO", "AAPL", "A", "B", "C"]
 
     # Plotter(df.loc[0,2], primary_ticker=primary_ticker, peers=peers).bar()
     p = Plotter(df, primary_ticker=primary_ticker, peers=peers)
     p.line(y_col="value").show()
-    p.bar(y_col="value", mask=[True, False, True, False, True, False, True, False]).show()
+    p.bar(
+        y_col="value", mask=[True, False, True, False, True, False, True, False]
+    ).show()

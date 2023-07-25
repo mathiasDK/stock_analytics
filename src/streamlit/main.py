@@ -10,11 +10,12 @@ st.set_page_config(
 st.session_state["main_ticker"] = ""
 st.session_state["peer_list"] = []
 st.session_state["data"] = None
-for peer in range(1,10):
-    peer_idx = "peer"+str(peer)
-    if peer_idx+"_name" not in st.session_state:
-        st.session_state[peer_idx+"_visible"] = True
-        st.session_state[peer_idx+"_name"] = ""
+for peer in range(1, 10):
+    peer_idx = "peer" + str(peer)
+    if peer_idx + "_name" not in st.session_state:
+        st.session_state[peer_idx + "_visible"] = True
+        st.session_state[peer_idx + "_name"] = ""
+
 
 def main():
     st.title("Peer Universe")
@@ -36,6 +37,7 @@ def main():
         Note that if you look at a metric that is not a ratio, then different currencies will naturally make the values different across the peers.
         """
     )
+
 
 if __name__ == "__main__":
     main()
