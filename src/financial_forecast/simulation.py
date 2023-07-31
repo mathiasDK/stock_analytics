@@ -1,12 +1,13 @@
 import numpy as np
 
+
 class FinancialForecast:
     # Source of inspiration: https://www.linkedin.com/pulse/how-assess-value-company-combining-discounted-cash-anthony/
 
     def __init__(
         self,
         current: dict = None,
-        estimates: dict|list=None,
+        estimates: dict | list = None,
         # current_revenue=None,
         # estimated_future_revenue=None,
         # estimated_future_revenue_uncertainty=None,
@@ -78,8 +79,10 @@ class FinancialForecast:
         self.tax_rate = tax_rate
 
         scenario_names = []
+        total_samples = 0
         for i, estimate in enumerate(self.estimates):
-            samples = int(estimate["probability"]*self.n_samples)
+            samples = int(estimate["probability"] * n_samples)
+            total_samples += samples
             try:
                 scenario_name = estimate["scenario_name"]
             except:
@@ -87,10 +90,19 @@ class FinancialForecast:
             for _ in range(samples):
                 scenario_names.append(scenario_name)
         self.output = {
-            "samples": [int(self.n_samples*estimate["probability"]) for estimate in self.estimates],
-            "scenario_name": [estimate["scenario_name"] if "scenario_name" in estimate.keys() else "scenario_" + str(i) for i, estimate in enumerate(self.estimates)],
-            "scenario_name_long": scenario_names
+            "samples": [
+                int(self.n_samples * estimate["probability"])
+                for estimate in self.estimates
+            ],
+            "scenario_name": [
+                estimate["scenario_name"]
+                if "scenario_name" in estimate.keys()
+                else "scenario_" + str(i)
+                for i, estimate in enumerate(self.estimates)
+            ],
+            "scenario_name_long": scenario_names,
         }
+        self.n_samples = total_samples
 
     def get_revenue(self) -> np.ndarray:
         """Create a matrix with a shape of n_samples*n_periods with the estimated revenue in each period for each simulation.
@@ -207,9 +219,13 @@ class FinancialForecast:
                     axis=0,
                 )
             except NameError:
-                estimate_deprication_amortization_matrix = scenario_estimate_deprication_amortization_matrix
+                estimate_deprication_amortization_matrix = (
+                    scenario_estimate_deprication_amortization_matrix
+                )
 
-        self.output["deprication_amortization"] = estimate_deprication_amortization_matrix
+        self.output[
+            "deprication_amortization"
+        ] = estimate_deprication_amortization_matrix
         return estimate_deprication_amortization_matrix
 
     def get_interest_expense(self) -> np.ndarray:
@@ -242,9 +258,11 @@ class FinancialForecast:
                     axis=0,
                 )
             except NameError:
-                estimate_interest_expense_matrix = scenario_estimate_interest_expense_matrix
+                estimate_interest_expense_matrix = (
+                    scenario_estimate_interest_expense_matrix
+                )
 
-        self.output["interest_expense"]=estimate_interest_expense_matrix
+        self.output["interest_expense"] = estimate_interest_expense_matrix
         return estimate_interest_expense_matrix
 
     def get_net_working_capital(self) -> np.ndarray:
@@ -267,7 +285,7 @@ class FinancialForecast:
             scenario_estimate_net_working_capital_matrix = self._estimated_matrix(
                 estimate["net_working_capital"],
                 estimate["net_working_capital_uncertainty"],
-                self.current["net_working_capital_amortization"],
+                self.current["net_working_capital"],
                 samples,
             )
             try:
@@ -277,9 +295,11 @@ class FinancialForecast:
                     axis=0,
                 )
             except NameError:
-                estimate_net_working_capital_matrix = scenario_estimate_net_working_capital_matrix
+                estimate_net_working_capital_matrix = (
+                    scenario_estimate_net_working_capital_matrix
+                )
 
-        self.output["net_working_capital"]=estimate_net_working_capital_matrix
+        self.output["net_working_capital"] = estimate_net_working_capital_matrix
         return estimate_net_working_capital_matrix
 
     def get_ebit_margin(self) -> np.ndarray:
@@ -314,16 +334,13 @@ class FinancialForecast:
             except NameError:
                 estimate_ebit_margin_matrix = scenario_estimate_ebit_margin_matrix
 
-        self.output["ebit_margin"]=estimate_ebit_margin_matrix
+        self.output["ebit_margin"] = estimate_ebit_margin_matrix
         return estimate_ebit_margin_matrix
 
     def get_sga(self) -> np.ndarray:
         if not "gross_profit" in self.output.keys():
             self.get_gross_profit()
         gross_profit = self.output["gross_profit"]
-        if not "interest_expense" in self.output.keys():
-            self.get_interest_expense()
-        interest_expense = self.output["interest_expense"]
         if not "deprication_amortization" in self.output.keys():
             self.get_deprication_amortization()
         deprication_amortization = self.output["deprication_amortization"]
@@ -332,25 +349,26 @@ class FinancialForecast:
             self.get_ebit_margin()
         ebit_margin = self.output["ebit_margin"]
 
-        sga = gross_profit - interest_expense - deprication_amortization - ebit_margin
+        sga = gross_profit - deprication_amortization - ebit_margin
 
+        self.output["selling_general_admin_expense"] = sga
+        return sga
 
     def get_net_income(self) -> np.ndarray:
-        # gross_profit = self.get_gross_profit()
-        # sga = -1 * self.get_sga()
-        # dep_amort = self.get_dep_amort()
-        # int_exp = self.get_interest_expense()
         if not "revenue" in self.output.keys():
             self.get_revenue()
         revenue = self.output["revenue"]
         if not "ebit_margin" in self.output.keys():
             self.get_ebit_margin()
         ebit_margin = self.output["ebit_margin"]
-        profit_before_tax = revenue * ebit_margin  # gross_profit + sga + dep_amort + int_exp
+        if not "interest_expense" in self.output.keys():
+            self.get_interest_expense()
+        interest_expense = self.output["interest_expense"]
+        profit_before_tax = revenue * ebit_margin - interest_expense
         tax = profit_before_tax * self.tax_rate
         net_income = profit_before_tax - tax
 
-        self.output["net_income"]=net_income
+        self.output["net_income"] = net_income
         return net_income
 
     def get_free_cashflow(self) -> np.ndarray:
@@ -369,7 +387,7 @@ class FinancialForecast:
         int_exp = self.output["interest_expense"]
         if not "deprication_amortization" in self.output.keys():
             self.get_deprication_amortization()
-        dep_amort = self.output["deprication_amortization"] 
+        dep_amort = self.output["deprication_amortization"]
         capex = dep_amort  # WHY?
         fcf = net_income - int_exp - dep_amort + nwc + capex
 
@@ -377,7 +395,10 @@ class FinancialForecast:
         return fcf
 
     def get_discount_factor(self) -> np.ndarray:
-        discount_factor = np.power(1 + self.wacc, self.arr_periods)
+        arr_periods = np.ones((self.n_samples, self.n_periods)) * np.linspace(
+            1, self.n_periods, self.n_periods
+        )
+        discount_factor = np.power(1 + self.wacc, arr_periods)
         return discount_factor
 
     def get_discounted_company_value(self) -> np.ndarray:
@@ -395,25 +416,25 @@ class FinancialForecast:
         )
 
         company_value = np.sum(npv, axis=1) + terminal_value
-        self.discounted_company_value = company_value
+
+        self.output["company_value"] = company_value
         return company_value
 
     def get_fair_value_per_share(self) -> np.array:
-        if not hasattr(self, "discounted_company_value"):
-            # Making sure that there is a discounted company value calculated
+        if not "company_value" in self.output.keys():
             self.get_discounted_company_value()
 
         shares_full = []
 
-        # Adding the number of shares for each scenario so it can divide the discounted 
+        # Adding the number of shares for each scenario so it can divide the discounted
         # company value and thereby calculate the current value of the shares.
         for estimate, samples in zip(self.estimates, self.output["samples"]):
 
             # shares = [estimate['shares']]*samples
-            [shares_full.append(estimate['shares']) for _ in range(samples)]
+            [shares_full.append(estimate["shares"]) for _ in range(samples)]
             # shares_full = [item for sublist in shares_full for item in sublist]  # Flattening
 
-        fair_value_per_share = self.discounted_company_value / np.array(shares_full)
+        fair_value_per_share = self.output["company_value"] / np.array(shares_full)
         self.output["fair_value_per_share"] = fair_value_per_share
         return fair_value_per_share
 
@@ -437,32 +458,47 @@ def cagr(start_value, end_value, periods) -> float:
 
 if __name__ == "__main__":
     current = {
-        'revenue': 2200,
-        'gross_margin': 0.2,
-        'ebit_margin': 0.1
+        "revenue": 2200,
+        "gross_margin": 0.2,
+        "ebit_margin": 0.1,
+        "interest_expense": 100,
+        "deprication_amortization": 200,
+        "net_working_capital": 100,
     }
 
     scenario_1 = {
-        'revenue': 3500,
-        'revenue_uncertainty': 200,
-        'gross_margin': 0.25,
-        'gross_margin_uncertainty': 0.05,
-        'deprication_amortization': 200,
-        'deprication_amortization_uncertainty': 200,
-        'ebit_margin': 0.15,
-        'ebit_margin_uncertainty': 0.02,
-        'probability': 0.75,
-        "scenario_name": "random"
+        "revenue": 3500,
+        "revenue_uncertainty": 200,
+        "gross_margin": 0.25,
+        "gross_margin_uncertainty": 0.05,
+        "deprication_amortization": 200,
+        "deprication_amortization_uncertainty": 200,
+        "interest_expense": 200,
+        "interest_expense_uncertainty": 10,
+        "net_working_capital": 100,
+        "net_working_capital_uncertainty": 0,
+        "ebit_margin": 0.15,
+        "ebit_margin_uncertainty": 0.02,
+        "probability": 0.75,
+        "scenario_name": "random",
+        "shares": 10000,
     }
     scenario_2 = {
-        'revenue': 3500,
-        'revenue_uncertainty': 200,
-        'gross_margin': 0.35,
-        'gross_margin_uncertainty': 0.05,
-        'ebit_margin': 0.25,
-        'ebit_margin_uncertainty': 0.02,
-        'probability': 0.25,
-        "scenario_name": "likely"
+        "revenue": 3500,
+        "revenue_uncertainty": 200,
+        "gross_margin": 0.35,
+        "gross_margin_uncertainty": 0.05,
+        "deprication_amortization": 200,
+        "deprication_amortization_uncertainty": 200,
+        "interest_expense": 200,
+        "interest_expense_uncertainty": 10,
+        "net_working_capital": 100,
+        "net_working_capital_uncertainty": 0,
+        "ebit_margin": 0.25,
+        "ebit_margin_uncertainty": 0.02,
+        "probability": 0.25,
+        "scenario_name": "likely",
+        "shares": 10000,
     }
     estimates = [scenario_1, scenario_2]
     ff = FinancialForecast(
@@ -470,7 +506,9 @@ if __name__ == "__main__":
         estimates,
         n_periods=5,
         n_samples=10,
-        tax_rate=0.22
+        tax_rate=0.22,
+        wacc=0.08,
+        perpetual_rate=0.02,
     )
     ff.get_ebit_margin()
     ff.get_fair_value_per_share()
