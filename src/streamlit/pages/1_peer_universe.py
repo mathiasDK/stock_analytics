@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.yf_extractor import YahooExtractor
+from helpers.yf_extractor import YahooExtractor
 import pandas as pd
 
 
