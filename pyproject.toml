@@ -1,4 +1,4 @@
-requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3", "numpy"]
+requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3", "numpy", "black==22.12.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
